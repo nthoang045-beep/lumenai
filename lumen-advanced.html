@@ -1,0 +1,2593 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMEN — Hệ thống Phát hiện Sớm Cảm xúc</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   LUMEN ADVANCED — CSS FOUNDATION
+   Aesthetic: Deep Navy × Cream × Terracotta × Sage
+   ============================================================ */
+:root {
+  --navy:    #0e1117;
+  --navy2:   #141924;
+  --navy3:   #1c2333;
+  --navy4:   #232d42;
+  --cream:   #f5f0e8;
+  --cream2:  #ede5d6;
+  --cream3:  #ddd0bd;
+  --terra:   #c4735a;
+  --terra2:  #e0956e;
+  --terra3:  #f0b896;
+  --sage:    #6a9e82;
+  --sage2:   #8dc4a0;
+  --amber:   #d4a84b;
+  --rose:    #c45a6a;
+  --sky:     #5a8ec4;
+  --lavender:#8a78c4;
+
+  --glow-t:  rgba(196,115,90,0.22);
+  --glow-s:  rgba(106,158,130,0.18);
+  --glow-r:  rgba(196,90,106,0.2);
+
+  --border:  rgba(245,240,232,0.1);
+  --border2: rgba(245,240,232,0.06);
+  --shadow:  0 4px 32px rgba(0,0,0,0.4);
+  --shadow2: 0 16px 64px rgba(0,0,0,0.5);
+
+  --r:  20px;
+  --rs: 12px;
+  --rx: 30px;
+
+  --transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* LIGHT THEME */
+[data-theme="light"] {
+  --navy:    #faf8f4;
+  --navy2:   #f2ede4;
+  --navy3:   #e8e0d0;
+  --navy4:   #ddd4c0;
+  --cream:   #2a2018;
+  --cream2:  #4a3828;
+  --cream3:  #6a5848;
+  --terra:   #c4735a;
+  --border:  rgba(42,32,24,0.12);
+  --border2: rgba(42,32,24,0.06);
+  --shadow:  0 4px 32px rgba(0,0,0,0.1);
+  --shadow2: 0 16px 64px rgba(0,0,0,0.15);
+  --glow-t:  rgba(196,115,90,0.18);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  font-family:'Sora',sans-serif;
+  background: var(--navy);
+  color: var(--cream);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: none;
+  transition: background 0.5s, color 0.5s;
+}
+
+/* CUSTOM CURSOR */
+#cursor {
+  position: fixed;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--terra);
+  pointer-events: none;
+  z-index: 99999;
+  mix-blend-mode: normal;
+  transform: translate(-50%,-50%);
+  transition: width 0.2s, height 0.2s, background 0.2s;
+  box-shadow: 0 0 20px var(--glow-t);
+}
+#cursor-ring {
+  position: fixed;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(196,115,90,0.4);
+  pointer-events: none;
+  z-index: 99998;
+  transform: translate(-50%,-50%);
+  transition: all 0.12s ease;
+}
+body:hover #cursor { opacity: 1; }
+
+/* NOISE OVERLAY */
+body::before {
+  content:'';
+  position: fixed; inset:0; z-index:9998;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none; opacity: 0.6;
+}
+
+/* PARTICLE CANVAS */
+#particles { position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.35; }
+
+/* ============================================================ NAV */
+nav {
+  position: fixed; top:0; left:0; right:0; z-index:200;
+  height: 64px;
+  display: flex; align-items:center; justify-content:space-between;
+  padding: 0 32px;
+  background: rgba(14,17,23,0.85);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+}
+[data-theme="light"] nav { background: rgba(250,248,244,0.9); }
+
+.nav-logo {
+  display: flex; align-items:center; gap:12px;
+  font-family:'Playfair Display',serif;
+  font-size: 1.5rem; font-weight:400;
+  color: var(--terra); letter-spacing:0.18em;
+}
+.nav-logo-orb {
+  width:10px; height:10px; border-radius:50%;
+  background: var(--terra);
+  box-shadow: 0 0 16px var(--glow-t);
+  animation: orb-pulse 3s ease-in-out infinite;
+}
+@keyframes orb-pulse {
+  0%,100%{transform:scale(1);opacity:1;}
+  50%{transform:scale(0.65);opacity:0.5;}
+}
+
+.nav-tabs {
+  display:flex; gap:4px;
+  background: var(--navy2);
+  border:1px solid var(--border);
+  border-radius: var(--rx);
+  padding:4px;
+}
+.nav-tab {
+  padding:7px 18px; border-radius:50px;
+  font-size:0.78rem; font-weight:500;
+  cursor:pointer; transition: var(--transition);
+  color: var(--cream3); white-space:nowrap;
+  border:none; background:transparent;
+  font-family:'Sora',sans-serif;
+}
+.nav-tab.active {
+  background: var(--terra);
+  color: white;
+  box-shadow: 0 4px 16px var(--glow-t);
+}
+.nav-tab:hover:not(.active) { color:var(--cream); background:var(--border); }
+
+.nav-actions { display:flex; gap:10px; align-items:center; }
+.icon-btn {
+  width:36px; height:36px; border-radius:50%;
+  background: var(--navy2);
+  border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition: var(--transition);
+  font-size:0.9rem;
+}
+.icon-btn:hover { background:var(--navy3); border-color:var(--terra); }
+
+/* ============================================================ SCREENS */
+.screen {
+  position: absolute; inset:0;
+  padding-top:64px;
+  display: flex; flex-direction:column;
+  opacity:0; pointer-events:none;
+  transition: opacity 0.5s cubic-bezier(0.4,0,0.2,1),
+              transform 0.5s cubic-bezier(0.4,0,0.2,1);
+  transform: translateY(16px);
+  z-index:1;
+  overflow-y:auto;
+}
+.screen.active {
+  opacity:1; pointer-events:all; transform:translateY(0);
+}
+#app { position:relative; min-height:100vh; overflow:hidden; }
+
+/* ============================================================ SCREEN 1 — OPENING */
+#screen-home {
+  align-items:center; justify-content:center;
+  text-align:center;
+  min-height:100vh;
+}
+.home-inner { z-index:2; padding:40px 24px; max-width:620px; margin:0 auto; }
+
+.breathing-orb-wrap {
+  position:relative; display:inline-block;
+  margin-bottom:48px;
+}
+.breathing-orb {
+  width:140px; height:140px; border-radius:50%;
+  background: radial-gradient(circle at 35% 35%,
+    var(--terra3) 0%, var(--terra) 40%,
+    rgba(196,115,90,0.3) 70%, transparent 100%);
+  animation: breathe-main 5s ease-in-out infinite;
+  box-shadow:
+    0 0 40px var(--glow-t),
+    0 0 80px rgba(196,115,90,0.1),
+    inset 0 0 30px rgba(255,200,160,0.2);
+  margin:0 auto;
+}
+@keyframes breathe-main {
+  0%,100%{transform:scale(1); box-shadow:0 0 40px var(--glow-t),0 0 80px rgba(196,115,90,0.1);}
+  50%{transform:scale(1.18); box-shadow:0 0 70px var(--glow-t),0 0 120px rgba(196,115,90,0.18);}
+}
+.orb-ring {
+  position:absolute; inset:-20px; border-radius:50%;
+  border:1px solid rgba(196,115,90,0.2);
+  animation:ring-expand 5s ease-in-out infinite;
+}
+.orb-ring2 {
+  position:absolute; inset:-40px; border-radius:50%;
+  border:1px solid rgba(196,115,90,0.1);
+  animation:ring-expand 5s ease-in-out infinite 0.5s;
+}
+@keyframes ring-expand {
+  0%,100%{transform:scale(1); opacity:0.8;}
+  50%{transform:scale(1.08); opacity:0.3;}
+}
+
+.home-eyebrow {
+  font-size:0.72rem; letter-spacing:0.28em; text-transform:uppercase;
+  color:var(--terra); margin-bottom:20px;
+  opacity:0; animation:fadein 0.8s ease 0.3s forwards;
+}
+.home-title {
+  font-family:'Playfair Display',serif;
+  font-size:clamp(2.2rem,5vw,3.6rem);
+  font-weight:400; line-height:1.25;
+  color:var(--cream); margin-bottom:12px;
+  opacity:0; animation:fadein 0.8s ease 0.5s forwards;
+}
+.home-title em { font-style:italic; color:var(--terra); }
+.home-sub {
+  font-size:clamp(1rem,2vw,1.2rem);
+  color:var(--cream3); font-weight:300; line-height:1.7;
+  margin-bottom:48px;
+  opacity:0; animation:fadein 0.8s ease 0.7s forwards;
+}
+
+@keyframes fadein { from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);} }
+
+.home-btns {
+  display:flex; flex-direction:column; gap:14px; align-items:center;
+  opacity:0; animation:fadein 0.8s ease 0.9s forwards;
+}
+.home-btn {
+  width:100%; max-width:360px;
+  padding:18px 32px; border-radius:var(--rx);
+  border:none; cursor:pointer;
+  font-family:'Sora',sans-serif; font-size:0.95rem; font-weight:500;
+  transition:var(--transition); text-align:left;
+  display:flex; align-items:center; gap:16px;
+  position:relative; overflow:hidden;
+}
+.home-btn::before {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+  transform:translateX(-100%); transition:transform 0.6s ease;
+}
+.home-btn:hover::before { transform:translateX(100%); }
+.home-btn-primary {
+  background: linear-gradient(135deg, var(--terra), var(--terra2));
+  color:white; box-shadow: 0 8px 32px var(--glow-t);
+}
+.home-btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 40px var(--glow-t); }
+.home-btn-secondary {
+  background:var(--navy2); color:var(--cream2);
+  border:1px solid var(--border);
+}
+.home-btn-secondary:hover { background:var(--navy3); border-color:var(--terra); color:var(--cream); }
+.home-btn-ghost {
+  background:transparent; color:var(--cream3);
+  border:1px solid var(--border2);
+}
+.home-btn-ghost:hover { background:var(--navy2); color:var(--cream); }
+.btn-emoji { font-size:1.4rem; flex-shrink:0; }
+.btn-text-wrap { display:flex; flex-direction:column; }
+.btn-label { font-size:0.95rem; font-weight:500; }
+.btn-desc { font-size:0.75rem; opacity:0.65; font-weight:300; margin-top:2px; }
+
+/* ============================================================ SCREEN 2 — CHAT */
+#screen-chat {
+  display:flex; flex-direction:column;
+}
+.chat-layout {
+  flex:1; display:flex; gap:0;
+  height:calc(100vh - 64px);
+}
+.chat-main {
+  flex:1; display:flex; flex-direction:column;
+  padding:24px 28px;
+  border-right:1px solid var(--border2);
+  overflow:hidden;
+}
+.chat-messages {
+  flex:1; overflow-y:auto;
+  display:flex; flex-direction:column; gap:16px;
+  padding-bottom:12px;
+  scroll-behavior:smooth;
+}
+.chat-messages::-webkit-scrollbar { width:4px; }
+.chat-messages::-webkit-scrollbar-track { background:transparent; }
+.chat-messages::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+/* MESSAGES */
+.msg { display:flex; gap:12px; animation:msg-in 0.4s ease; }
+@keyframes msg-in { from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);} }
+.msg.user { flex-direction:row-reverse; }
+.msg-avatar {
+  width:36px; height:36px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1rem;
+}
+.msg-avatar.ai-av {
+  background: radial-gradient(circle, var(--terra3), var(--terra));
+  box-shadow: 0 0 20px var(--glow-t);
+}
+.msg-avatar.user-av { background:var(--navy3); border:1px solid var(--border); }
+.msg-body { max-width:72%; display:flex; flex-direction:column; gap:4px; }
+.msg.user .msg-body { align-items:flex-end; }
+.bubble {
+  padding:14px 18px; line-height:1.75;
+  font-size:0.9rem; border-radius:var(--r);
+}
+.ai .bubble {
+  background:var(--navy2); border:1px solid var(--border);
+  color:var(--cream2); border-bottom-left-radius:6px;
+}
+.user .bubble {
+  background:linear-gradient(135deg,var(--terra),var(--terra2));
+  color:white; border-bottom-right-radius:6px;
+}
+.msg-time { font-size:0.68rem; color:var(--cream3); opacity:0.5; padding:0 4px; }
+.msg.user .msg-time { text-align:right; }
+
+/* COLOR PICKER MSG */
+.color-picker-msg { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+.color-orb {
+  width:44px; height:44px; border-radius:50%;
+  cursor:pointer; transition:var(--transition);
+  border:2px solid transparent;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);
+}
+.color-orb:hover { transform:scale(1.15); }
+.color-orb.picked { border-color:var(--cream); box-shadow:0 0 0 3px var(--glow-t),0 4px 12px rgba(0,0,0,0.3); transform:scale(1.1); }
+
+/* SCALE MSG */
+.scale-msg { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.scale-btn {
+  width:42px; height:42px; border-radius:50%;
+  background:var(--navy3); border:1px solid var(--border);
+  color:var(--cream2); font-size:0.85rem; cursor:pointer;
+  transition:var(--transition); display:flex; align-items:center; justify-content:center;
+  font-family:'Sora',sans-serif;
+}
+.scale-btn:hover { border-color:var(--terra); background:var(--navy4); }
+.scale-btn.picked { background:var(--terra); border-color:var(--terra); color:white; }
+
+/* CHOICE MSG */
+.choice-msg { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.choice-opt {
+  padding:12px 18px; border-radius:var(--rs);
+  background:var(--navy3); border:1px solid var(--border2);
+  color:var(--cream2); font-size:0.85rem;
+  cursor:pointer; transition:var(--transition); text-align:left;
+  font-family:'Sora',sans-serif;
+}
+.choice-opt:hover { border-color:var(--terra); background:var(--navy4); color:var(--cream); transform:translateX(4px); }
+.choice-opt.picked { border-color:var(--terra); background:rgba(196,115,90,0.12); color:var(--terra2); }
+
+/* THINKING */
+.thinking-msg {
+  display:flex; align-items:center; gap:12px;
+  padding:14px 18px; background:var(--navy2);
+  border:1px solid var(--border); border-radius:var(--r);
+  border-bottom-left-radius:6px;
+  font-size:0.82rem; color:var(--cream3);
+  animation:msg-in 0.3s ease;
+}
+.dots { display:flex; gap:5px; }
+.dots span {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--terra);
+  animation:dot-blink 1.4s infinite;
+}
+.dots span:nth-child(2){animation-delay:0.2s;}
+.dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes dot-blink{0%,60%,100%{opacity:0.2;transform:scale(0.8);}30%{opacity:1;transform:scale(1);}}
+
+/* INPUT */
+.chat-input-area {
+  background:var(--navy2);
+  border:1px solid var(--border);
+  border-radius:var(--r); overflow:hidden;
+  margin-top:12px; transition:border-color 0.3s;
+}
+.chat-input-area:focus-within { border-color:var(--terra); box-shadow:0 0 0 3px var(--glow-t); }
+textarea#chatInput {
+  width:100%; padding:16px 20px 10px;
+  background:transparent; border:none; outline:none;
+  font-family:'Sora',sans-serif; font-size:0.9rem;
+  color:var(--cream); resize:none; min-height:72px; max-height:160px;
+  line-height:1.7;
+}
+textarea#chatInput::placeholder { color:var(--cream3); opacity:0.5; }
+.input-bar {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 16px 14px;
+}
+.input-hints { display:flex; gap:8px; }
+.hint-chip {
+  padding:5px 12px; border-radius:50px;
+  background:var(--navy3); border:1px solid var(--border2);
+  font-size:0.72rem; color:var(--cream3); cursor:pointer;
+  transition:var(--transition);
+}
+.hint-chip:hover { border-color:var(--terra); color:var(--terra2); }
+.send-btn {
+  background:var(--terra); color:white; border:none;
+  border-radius:50px; padding:9px 22px;
+  font-family:'Sora',sans-serif; font-size:0.85rem; font-weight:500;
+  cursor:pointer; transition:var(--transition);
+  display:flex; align-items:center; gap:8px;
+}
+.send-btn:hover { transform:translateY(-1px); box-shadow:0 6px 24px var(--glow-t); }
+.send-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
+
+/* CHAT SIDEBAR */
+.chat-sidebar {
+  width:300px; flex-shrink:0;
+  padding:24px 20px; overflow-y:auto;
+  display:flex; flex-direction:column; gap:20px;
+}
+.chat-sidebar::-webkit-scrollbar { width:4px; }
+.chat-sidebar::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+.sidebar-card {
+  background:var(--navy2); border:1px solid var(--border2);
+  border-radius:var(--r); padding:18px;
+}
+.sidebar-card h4 {
+  font-size:0.68rem; letter-spacing:0.18em; text-transform:uppercase;
+  color:var(--cream3); margin-bottom:14px; opacity:0.7;
+}
+
+/* SCORE RING */
+.score-ring-wrap { display:flex; justify-content:center; padding:8px 0; }
+.score-ring { width:100px; height:100px; position:relative; }
+.score-ring svg { transform:rotate(-90deg); }
+.ring-track { fill:none; stroke:var(--border); stroke-width:7; }
+.ring-fill {
+  fill:none; stroke-width:7; stroke-linecap:round;
+  stroke: var(--sage);
+  stroke-dasharray: 283;
+  stroke-dashoffset: 283;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1), stroke 0.5s;
+}
+.ring-center {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+}
+.ring-score {
+  font-family:'Playfair Display',serif;
+  font-size:1.8rem; font-weight:400;
+  color:var(--cream); line-height:1;
+}
+.ring-label { font-size:0.6rem; color:var(--cream3); opacity:0.6; letter-spacing:0.1em; margin-top:2px; }
+
+/* RISK BADGE */
+.risk-badge {
+  display:flex; align-items:center; gap:8px;
+  padding:10px 14px; border-radius:50px;
+  font-size:0.8rem; font-weight:500; margin-top:8px;
+}
+.risk-stable { background:rgba(106,158,130,0.15); color:var(--sage); border:1px solid rgba(106,158,130,0.3); }
+.risk-monitor { background:rgba(212,168,75,0.15); color:var(--amber); border:1px solid rgba(212,168,75,0.3); }
+.risk-early { background:rgba(196,90,106,0.15); color:var(--rose); border:1px solid rgba(196,90,106,0.3); }
+.risk-dot { width:7px; height:7px; border-radius:50%; background:currentColor; animation:orb-pulse 2s infinite; }
+
+/* PATTERNS */
+.pattern-grid { display:flex; flex-direction:column; gap:7px; }
+.pat-item {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 12px; border-radius:var(--rs);
+  background:var(--navy3); border:1px solid var(--border2);
+  font-size:0.78rem; color:var(--cream3);
+  transition:var(--transition);
+}
+.pat-item.hit {
+  background:rgba(196,115,90,0.1); border-color:rgba(196,115,90,0.3);
+  color:var(--cream2);
+}
+.pat-item .pat-icon { font-size:0.95rem; width:18px; text-align:center; }
+
+/* TIMELINE MINI */
+.mini-timeline { display:flex; flex-direction:column; gap:8px; }
+.tl-item {
+  padding:10px 12px; border-radius:var(--rs);
+  background:var(--navy3); border:1px solid var(--border2);
+  cursor:pointer; transition:var(--transition);
+}
+.tl-item:hover { border-color:var(--terra); background:var(--navy4); }
+.tl-date { font-size:0.68rem; color:var(--cream3); opacity:0.6; margin-bottom:3px; }
+.tl-preview { font-size:0.78rem; color:var(--cream2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tl-chip {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:2px 8px; border-radius:50px; font-size:0.66rem;
+  margin-top:5px;
+}
+
+/* ============================================================ SCREEN 3 — DASHBOARD */
+#screen-dashboard {
+  padding-top:64px; overflow-y:auto;
+}
+.dashboard-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  grid-template-rows:auto auto auto;
+  gap:20px;
+  padding:28px;
+}
+.dash-card {
+  background:var(--navy2); border:1px solid var(--border2);
+  border-radius:var(--r); padding:24px;
+  transition:var(--transition);
+  animation:fadein 0.5s ease;
+}
+.dash-card:hover { border-color:var(--border); box-shadow:var(--shadow); }
+.dash-card h3 {
+  font-size:0.7rem; letter-spacing:0.2em; text-transform:uppercase;
+  color:var(--cream3); opacity:0.6; margin-bottom:16px;
+  display:flex; align-items:center; gap:8px;
+}
+.dash-card.wide { grid-column:span 2; }
+.dash-card.full { grid-column:span 3; }
+.dash-card.tall { grid-row:span 2; }
+
+/* STAT NUMBERS */
+.stat-big {
+  font-family:'Playfair Display',serif;
+  font-size:3rem; font-weight:400; line-height:1;
+  color:var(--cream); margin-bottom:4px;
+}
+.stat-sub { font-size:0.82rem; color:var(--cream3); }
+.stat-trend {
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:0.75rem; padding:3px 10px; border-radius:50px; margin-top:8px;
+}
+.trend-up { background:rgba(196,90,106,0.15); color:var(--rose); }
+.trend-down { background:rgba(106,158,130,0.15); color:var(--sage); }
+.trend-flat { background:rgba(212,168,75,0.15); color:var(--amber); }
+
+/* ============================================================ SCREEN 4 — TIMELINE CHART */
+#screen-timeline { padding-top:64px; overflow-y:auto; }
+.timeline-wrap { padding:28px; }
+.timeline-header {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:28px;
+}
+.timeline-header h2 {
+  font-family:'Playfair Display',serif;
+  font-size:1.8rem; font-weight:400; color:var(--cream);
+}
+.timeline-header p { font-size:0.85rem; color:var(--cream3); margin-top:4px; }
+.chart-container {
+  background:var(--navy2); border:1px solid var(--border2);
+  border-radius:var(--r); padding:24px;
+  position:relative; overflow:hidden;
+}
+#timelineCanvas { width:100%; height:260px; display:block; }
+.chart-tooltip {
+  position:absolute; pointer-events:none;
+  background:var(--navy); border:1px solid var(--border);
+  border-radius:var(--rs); padding:10px 14px;
+  font-size:0.78rem; color:var(--cream2);
+  box-shadow:var(--shadow);
+  display:none;
+}
+.chart-tooltip.visible { display:block; }
+
+/* HEATMAP */
+.heatmap-grid {
+  display:grid; grid-template-columns:repeat(7,1fr); gap:8px;
+  margin-top:20px;
+}
+.heat-cell {
+  aspect-ratio:1; border-radius:var(--rs);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  font-size:0.7rem; cursor:pointer;
+  transition:var(--transition);
+  border:1px solid var(--border2);
+  gap:3px;
+}
+.heat-cell:hover { transform:scale(1.08); border-color:var(--border); }
+.heat-cell .heat-day { font-size:0.62rem; opacity:0.5; }
+.heat-cell .heat-score { font-family:'Playfair Display',serif; font-size:1.1rem; }
+.heat-0 { background:var(--navy3); color:var(--cream3); }
+.heat-1 { background:rgba(106,158,130,0.15); color:var(--sage); }
+.heat-2 { background:rgba(212,168,75,0.15); color:var(--amber); }
+.heat-3 { background:rgba(196,90,106,0.12); color:var(--rose); }
+
+/* SILENCE TRACKER */
+.silence-bars { display:flex; flex-direction:column; gap:10px; margin-top:4px; }
+.silence-bar-row { display:flex; align-items:center; gap:12px; }
+.silence-bar-label { font-size:0.78rem; color:var(--cream2); width:120px; flex-shrink:0; }
+.silence-bar-track {
+  flex:1; height:8px; background:var(--navy3);
+  border-radius:4px; overflow:hidden;
+}
+.silence-bar-fill {
+  height:100%; border-radius:4px;
+  transition:width 1.5s cubic-bezier(0.4,0,0.2,1);
+}
+.silence-bar-val { font-size:0.75rem; color:var(--cream3); width:40px; text-align:right; }
+
+/* ============================================================ SCREEN 5 — SETTINGS */
+#screen-settings { padding-top:64px; overflow-y:auto; }
+.settings-wrap { padding:28px; max-width:700px; }
+.settings-wrap h2 {
+  font-family:'Playfair Display',serif;
+  font-size:1.8rem; color:var(--cream); margin-bottom:8px;
+}
+.settings-wrap > p { font-size:0.85rem; color:var(--cream3); margin-bottom:32px; }
+.settings-group { margin-bottom:32px; }
+.settings-group h3 {
+  font-size:0.7rem; letter-spacing:0.2em; text-transform:uppercase;
+  color:var(--terra); margin-bottom:16px; padding-bottom:10px;
+  border-bottom:1px solid var(--border2);
+}
+.setting-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 0; border-bottom:1px solid var(--border2);
+}
+.setting-row:last-child { border-bottom:none; }
+.setting-info { flex:1; }
+.setting-label { font-size:0.88rem; color:var(--cream2); font-weight:400; }
+.setting-desc { font-size:0.75rem; color:var(--cream3); margin-top:3px; opacity:0.7; }
+.setting-control { flex-shrink:0; margin-left:20px; }
+
+/* TOGGLE */
+.toggle {
+  width:48px; height:26px; border-radius:13px;
+  background:var(--navy3); border:1px solid var(--border);
+  cursor:pointer; position:relative; transition:var(--transition);
+}
+.toggle.on { background:var(--terra); border-color:var(--terra); }
+.toggle-knob {
+  position:absolute; top:3px; left:3px;
+  width:18px; height:18px; border-radius:50%;
+  background:var(--cream3); transition:var(--transition);
+}
+.toggle.on .toggle-knob { left:25px; background:white; }
+
+/* COLOR SWATCHES */
+.swatch-row { display:flex; gap:10px; }
+.swatch {
+  width:32px; height:32px; border-radius:50%;
+  cursor:pointer; transition:var(--transition);
+  border:2px solid transparent;
+}
+.swatch.active { border-color:var(--cream); box-shadow:0 0 0 2px var(--glow-t); transform:scale(1.1); }
+
+/* FONT PICKER */
+.font-opts { display:flex; gap:8px; }
+.font-opt {
+  padding:8px 16px; border-radius:50px;
+  background:var(--navy3); border:1px solid var(--border2);
+  font-size:0.8rem; color:var(--cream2); cursor:pointer;
+  transition:var(--transition);
+}
+.font-opt.active { background:var(--terra); border-color:var(--terra); color:white; }
+.font-opt:hover:not(.active) { border-color:var(--terra); }
+
+/* ============================================================ RESULT OVERLAY */
+.result-overlay {
+  position:fixed; inset:0; z-index:500;
+  background:rgba(14,17,23,0.92);
+  backdrop-filter:blur(24px);
+  display:flex; align-items:center; justify-content:center;
+  padding:24px;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.4s;
+}
+.result-overlay.open { opacity:1; pointer-events:all; }
+.result-panel {
+  background:var(--navy2); border:1px solid var(--border);
+  border-radius:var(--r); padding:36px;
+  max-width:600px; width:100%; max-height:88vh;
+  overflow-y:auto; position:relative;
+  box-shadow:var(--shadow2);
+  animation:panel-in 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes panel-in { from{transform:translateY(32px) scale(0.97);}to{transform:translateY(0) scale(1);} }
+.panel-close {
+  position:absolute; top:20px; right:20px;
+  width:32px; height:32px; border-radius:50%;
+  background:var(--navy3); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:0.8rem; color:var(--cream3);
+  transition:var(--transition);
+}
+.panel-close:hover { background:var(--rose); color:white; border-color:var(--rose); }
+
+.result-orb {
+  width:80px; height:80px; border-radius:50%; margin:0 auto 24px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:2rem; animation:breathe-main 4s ease-in-out infinite;
+}
+.result-orb.stable { background:rgba(106,158,130,0.2); box-shadow:0 0 40px var(--glow-s); }
+.result-orb.monitor { background:rgba(212,168,75,0.15); box-shadow:0 0 40px rgba(212,168,75,0.2); }
+.result-orb.early { background:rgba(196,90,106,0.15); box-shadow:0 0 40px var(--glow-r); }
+
+.result-panel h2 {
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.5rem,3vw,2.2rem); font-weight:400;
+  color:var(--cream); text-align:center; margin-bottom:8px;
+}
+.result-summary {
+  font-size:0.9rem; color:var(--cream2); line-height:1.8;
+  text-align:center; max-width:440px; margin:0 auto 24px;
+}
+.tone-response {
+  background:linear-gradient(135deg, rgba(196,115,90,0.08), rgba(196,115,90,0.04));
+  border:1px solid rgba(196,115,90,0.2);
+  border-radius:var(--r); padding:20px 24px;
+  font-family:'Playfair Display',serif; font-style:italic;
+  font-size:1rem; color:var(--cream2); line-height:1.8;
+  text-align:center; margin-bottom:24px;
+}
+
+.rec-section h4 {
+  font-size:0.68rem; letter-spacing:0.18em; text-transform:uppercase;
+  color:var(--cream3); opacity:0.6; margin-bottom:12px;
+}
+.rec-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.rec-card {
+  padding:16px; border-radius:var(--rs);
+  background:var(--navy3); border:1px solid var(--border2);
+  transition:var(--transition); cursor:default;
+}
+.rec-card:hover { border-color:var(--terra); background:var(--navy4); }
+.rec-card .rc-icon { font-size:1.3rem; margin-bottom:8px; }
+.rec-card .rc-title { font-size:0.82rem; font-weight:500; color:var(--cream); margin-bottom:3px; }
+.rec-card .rc-desc { font-size:0.74rem; color:var(--cream3); line-height:1.5; }
+
+.urgent-block {
+  background:rgba(196,90,106,0.08);
+  border:1px solid rgba(196,90,106,0.3);
+  border-radius:var(--r); padding:20px 24px;
+  margin-top:16px;
+  display:none;
+}
+.urgent-block.show { display:flex; gap:16px; }
+.urgent-block .ub-icon { font-size:1.8rem; flex-shrink:0; }
+.urgent-block h5 { font-size:0.88rem; color:var(--rose); margin-bottom:6px; }
+.urgent-block p { font-size:0.82rem; color:var(--cream2); line-height:1.6; }
+.urgent-block .hotline-num {
+  font-family:'Playfair Display',serif;
+  font-size:1.6rem; color:var(--rose); margin-top:8px;
+}
+
+.json-accordion {
+  margin-top:20px; border-top:1px solid var(--border2); padding-top:16px;
+}
+.json-toggle {
+  display:flex; align-items:center; gap:8px;
+  font-size:0.75rem; color:var(--cream3); cursor:pointer;
+  transition:color 0.2s;
+}
+.json-toggle:hover { color:var(--terra); }
+.json-body {
+  display:none; margin-top:12px;
+  background:var(--navy); border:1px solid var(--border2);
+  border-radius:var(--rs); padding:16px;
+  font-family:monospace; font-size:0.75rem;
+  color:var(--cream2); line-height:1.8; overflow-x:auto; white-space:pre;
+}
+.json-body.open { display:block; }
+.jk { color:var(--terra2); }
+.jv { color:var(--sage2); }
+.jn { color:var(--lavender); }
+.jb { color:var(--amber); }
+
+/* ============================================================ HOTLINE BANNER */
+.hotline-bar {
+  position:fixed; bottom:0; left:0; right:0; z-index:300;
+  background:linear-gradient(90deg, rgba(196,90,106,0.95), rgba(160,60,80,0.95));
+  border-top:1px solid rgba(196,90,106,0.5);
+  padding:14px 32px;
+  display:flex; align-items:center; gap:20px; justify-content:center;
+  transform:translateY(100%); transition:transform 0.5s cubic-bezier(0.4,0,0.2,1);
+  backdrop-filter:blur(16px);
+}
+.hotline-bar.show { transform:translateY(0); }
+.hotline-bar span { font-size:0.88rem; color:white; }
+.hotline-bar strong { font-family:'Playfair Display',serif; font-size:1.3rem; }
+.hotline-close {
+  margin-left:auto; background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.25); color:white;
+  border-radius:50px; padding:5px 14px;
+  cursor:pointer; font-size:0.78rem; font-family:'Sora',sans-serif;
+}
+
+/* ============================================================ VOICE MODAL */
+.voice-modal {
+  position:fixed; inset:0; z-index:600;
+  background:rgba(14,17,23,0.97);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 0.4s;
+}
+.voice-modal.open { opacity:1; pointer-events:all; }
+.voice-orb {
+  width:180px; height:180px; border-radius:50%;
+  background:radial-gradient(circle, var(--terra3), var(--terra), transparent 70%);
+  animation:breathe-main 5s ease-in-out infinite;
+  box-shadow:0 0 80px var(--glow-t), inset 0 0 40px rgba(255,200,150,0.15);
+  margin-bottom:36px;
+}
+.voice-text {
+  font-family:'Playfair Display',serif;
+  font-size:1.5rem; color:var(--cream); text-align:center;
+  max-width:400px; line-height:1.6;
+  animation:fadein 1s ease;
+}
+.voice-close {
+  position:absolute; top:32px; right:32px;
+  background:var(--navy2); border:1px solid var(--border);
+  color:var(--cream2); border-radius:50px; padding:8px 20px;
+  cursor:pointer; font-family:'Sora',sans-serif; font-size:0.85rem;
+}
+
+/* ============================================================ SCHOOL PORTAL */
+#screen-school { padding-top:64px; overflow-y:auto; }
+.school-wrap { padding:28px; }
+.anon-notice {
+  background:rgba(106,158,130,0.1); border:1px solid rgba(106,158,130,0.25);
+  border-radius:var(--r); padding:16px 20px; margin-bottom:24px;
+  display:flex; gap:12px; align-items:center;
+  font-size:0.84rem; color:var(--sage2);
+}
+.class-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.class-card {
+  background:var(--navy2); border:1px solid var(--border2);
+  border-radius:var(--r); padding:20px; text-align:center;
+  transition:var(--transition); cursor:pointer;
+}
+.class-card:hover { border-color:var(--terra); transform:translateY(-4px); box-shadow:var(--shadow); }
+.class-num {
+  font-family:'Playfair Display',serif;
+  font-size:2.5rem; color:var(--cream); line-height:1;
+}
+.class-label { font-size:0.75rem; color:var(--cream3); margin-top:6px; }
+.class-bar { height:4px; border-radius:2px; margin-top:12px; background:var(--navy3); overflow:hidden; }
+.class-bar-fill { height:100%; border-radius:2px; }
+
+/* ============================================================ KIDS MODE */
+body.kids-mode {
+  cursor: auto !important;
+  font-family: 'Nunito', 'Sora', sans-serif !important;
+}
+body.kids-mode #cursor,
+body.kids-mode #cursor-ring { display: none; }
+body.kids-mode #particles { opacity: 0.15; }
+
+/* Kids nav override */
+body.kids-mode nav {
+  background: rgba(255,220,180,0.95) !important;
+  border-bottom: 3px solid #f0a060 !important;
+}
+[data-theme="dark"] body.kids-mode nav {
+  background: rgba(40,30,60,0.96) !important;
+  border-bottom: 3px solid #b07ad4 !important;
+}
+body.kids-mode .nav-logo { color: #e06030 !important; font-size: 1.8rem !important; }
+
+/* Kids screen */
+#screen-kids {
+  padding-top: 64px;
+  overflow-y: auto;
+  align-items: center;
+  justify-content: flex-start;
+}
+.kids-wrap {
+  max-width: 680px; margin: 0 auto;
+  padding: 32px 24px 80px;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 0;
+}
+
+/* Kids welcome */
+.kids-welcome-orb {
+  width: 160px; height: 160px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%,
+    #ffe580 0%, #ffb347 35%, #ff7e5f 65%, rgba(255,126,95,0.2) 100%);
+  animation: breathe-main 4s ease-in-out infinite;
+  box-shadow: 0 0 50px rgba(255,179,71,0.4), 0 0 100px rgba(255,126,95,0.2);
+  margin-bottom: 28px; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 4rem;
+}
+.kids-title {
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  font-weight: 700; color: var(--cream);
+  line-height: 1.3; margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+body.kids-mode .kids-title { font-family: 'Nunito', sans-serif !important; }
+.kids-sub {
+  font-size: 1.1rem; color: var(--cream2);
+  line-height: 1.7; margin-bottom: 36px;
+  max-width: 420px;
+}
+
+/* Kids step UI */
+.kids-card {
+  background: var(--navy2);
+  border: 2px solid var(--border);
+  border-radius: 28px;
+  padding: 32px 28px;
+  width: 100%; max-width: 520px;
+  box-shadow: var(--shadow2);
+  transition: var(--transition);
+  animation: kids-bounceIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes kids-bounceIn {
+  from { opacity:0; transform:scale(0.85) translateY(20px); }
+  to   { opacity:1; transform:scale(1)    translateY(0);    }
+}
+.kids-step-label {
+  font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--terra); margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.kids-question {
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  font-weight: 600; color: var(--cream);
+  line-height: 1.4; margin-bottom: 28px;
+}
+body.kids-mode .kids-question { font-family: 'Nunito', sans-serif !important; }
+
+/* Kids emotion faces */
+.kids-faces {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 14px; margin-bottom: 8px;
+}
+.kids-face {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 18px 10px; border-radius: 20px;
+  background: var(--navy3); border: 2px solid var(--border2);
+  cursor: pointer; transition: var(--transition);
+  position: relative; overflow: hidden;
+}
+.kids-face::before {
+  content: ''; position: absolute; inset: 0; border-radius: 18px;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.06), transparent 70%);
+  opacity: 0; transition: opacity 0.2s;
+}
+.kids-face:hover { transform: translateY(-4px) scale(1.04); border-color: var(--terra); }
+.kids-face:hover::before { opacity: 1; }
+.kids-face.picked {
+  border-color: var(--terra2); background: rgba(196,115,90,0.15);
+  transform: translateY(-4px) scale(1.06);
+  box-shadow: 0 8px 24px var(--glow-t);
+}
+.face-emoji { font-size: 3rem; line-height: 1; display: block; }
+.face-label { font-size: 0.82rem; font-weight: 600; color: var(--cream2); }
+.face-desc  { font-size: 0.7rem; color: var(--cream3); line-height: 1.4; }
+
+/* Kids color world */
+.kids-colors {
+  display: flex; flex-wrap: wrap; gap: 14px;
+  justify-content: center; margin-bottom: 8px;
+}
+.kids-color-btn {
+  width: 72px; height: 72px; border-radius: 50%;
+  border: 3px solid transparent; cursor: pointer;
+  transition: var(--transition);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.kids-color-btn:hover { transform: scale(1.15); }
+.kids-color-btn.picked {
+  border-color: white; transform: scale(1.18);
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.25), 0 8px 24px rgba(0,0,0,0.4);
+}
+
+/* Kids scale stars */
+.kids-stars {
+  display: flex; gap: 10px; justify-content: center;
+  font-size: 2.2rem; flex-wrap: wrap; margin-bottom: 8px;
+}
+.kids-star {
+  cursor: pointer; transition: var(--transition);
+  opacity: 0.3; filter: grayscale(1);
+  display: inline-block;
+}
+.kids-star.lit { opacity: 1; filter: none; transform: scale(1.1); }
+.kids-star:hover { transform: scale(1.2); }
+
+/* Kids choices */
+.kids-choices { display: flex; flex-direction: column; gap: 12px; margin-bottom: 8px; }
+.kids-choice {
+  padding: 16px 20px; border-radius: 18px;
+  background: var(--navy3); border: 2px solid var(--border2);
+  color: var(--cream2); font-size: 1rem; font-weight: 500;
+  cursor: pointer; transition: var(--transition); text-align: left;
+  display: flex; align-items: center; gap: 14px;
+  font-family: inherit;
+}
+.kids-choice:hover  { border-color: var(--terra); background: var(--navy4); transform: translateX(6px); }
+.kids-choice.picked { border-color: var(--terra2); background: rgba(196,115,90,0.15); color: var(--terra2); }
+.kids-choice-icon   { font-size: 1.6rem; flex-shrink: 0; }
+
+/* Kids progress dots */
+.kids-dots {
+  display: flex; gap: 10px; justify-content: center;
+  margin-bottom: 28px;
+}
+.kids-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--border); transition: var(--transition);
+}
+.kids-dot.done  { background: var(--sage);  transform: scale(1.1); }
+.kids-dot.active{ background: var(--terra); transform: scale(1.3); box-shadow: 0 0 10px var(--glow-t); }
+
+/* Kids next button */
+.kids-next-btn {
+  margin-top: 24px; width: 100%;
+  padding: 16px 24px; border-radius: 50px; border: none;
+  background: linear-gradient(135deg, #f0a060, #e07040);
+  color: white; font-size: 1.05rem; font-weight: 700;
+  cursor: pointer; transition: var(--transition);
+  box-shadow: 0 8px 28px rgba(240,160,96,0.4);
+  font-family: inherit; letter-spacing: 0.02em;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.kids-next-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(240,160,96,0.5); }
+.kids-next-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* Kids result */
+.kids-result-card {
+  background: var(--navy2); border: 2px solid var(--border);
+  border-radius: 28px; padding: 36px 28px;
+  width: 100%; max-width: 520px;
+  text-align: center; animation: kids-bounceIn 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+.kids-result-big { font-size: 5rem; margin-bottom: 16px; animation: breathe-main 4s ease-in-out infinite; display: block; }
+.kids-result-title {
+  font-size: clamp(1.4rem,3vw,2rem); font-weight: 700;
+  color: var(--cream); margin-bottom: 12px;
+}
+body.kids-mode .kids-result-title { font-family: 'Nunito', sans-serif !important; }
+.kids-result-msg {
+  font-size: 1rem; color: var(--cream2); line-height: 1.8;
+  margin-bottom: 24px; max-width: 360px; margin-left: auto; margin-right: auto;
+}
+.kids-activities {
+  display: grid; grid-template-columns: repeat(2,1fr); gap: 12px;
+  margin-bottom: 24px;
+}
+.kids-activity {
+  padding: 16px 12px; border-radius: 18px;
+  background: var(--navy3); border: 2px solid var(--border2);
+  transition: var(--transition); cursor: default;
+}
+.kids-activity:hover { border-color: var(--terra); transform: translateY(-3px); }
+.kids-activity .ka-icon { font-size: 1.8rem; margin-bottom: 6px; }
+.kids-activity .ka-label{ font-size: 0.82rem; font-weight: 600; color: var(--cream); }
+.kids-restart-btn {
+  width: 100%; padding: 16px; border-radius: 50px; border: none;
+  background: linear-gradient(135deg, var(--terra), var(--terra2));
+  color: white; font-size: 1rem; font-weight: 700;
+  cursor: pointer; transition: var(--transition);
+  box-shadow: 0 8px 28px var(--glow-t); font-family: inherit;
+}
+.kids-restart-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 36px var(--glow-t); }
+
+/* Kids mode FAB toggle */
+#kidsModeBtn {
+  position: fixed; bottom: 28px; right: 28px; z-index: 400;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, #ffb347, #ff7e5f);
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+  box-shadow: 0 6px 24px rgba(255,179,71,0.5);
+  transition: var(--transition);
+  animation: kids-float 3s ease-in-out infinite;
+}
+@keyframes kids-float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+#kidsModeBtn:hover { transform: scale(1.12) translateY(-3px); box-shadow: 0 10px 32px rgba(255,179,71,0.6); }
+#kidsModeBtn .kids-fab-tooltip {
+  position: absolute; bottom: 66px; right: 0;
+  background: var(--navy2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 6px 12px;
+  font-size: 0.72rem; color: var(--cream2); white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  font-family: 'Sora', sans-serif;
+}
+#kidsModeBtn:hover .kids-fab-tooltip { opacity: 1; }
+
+/* ============================================================ RESPONSIVE */
+@media(max-width:1100px) {
+  .dashboard-grid { grid-template-columns:1fr 1fr; }
+  .dash-card.full { grid-column:span 2; }
+  .dash-card.wide { grid-column:span 2; }
+  .class-grid { grid-template-columns:repeat(2,1fr); }
+}
+@media(max-width:800px) {
+  .chat-sidebar { display:none; }
+  .nav-tabs { display:none; }
+  .dashboard-grid { grid-template-columns:1fr; }
+  .dash-card.wide,.dash-card.full { grid-column:span 1; }
+  .rec-grid { grid-template-columns:1fr; }
+  .class-grid { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- CUSTOM CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- PARTICLES -->
+<canvas id="particles"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-orb"></div>
+    LUMEN
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="gotoScreen('home',this)">Trang chủ</button>
+    <button class="nav-tab" onclick="gotoScreen('chat',this)">Chia sẻ</button>
+    <button class="nav-tab" onclick="gotoScreen('dashboard',this)">Tổng quan</button>
+    <button class="nav-tab" onclick="gotoScreen('timeline',this)">Dòng cảm xúc</button>
+    <button class="nav-tab" onclick="gotoScreen('school',this)">Cổng trường học</button>
+    <button class="nav-tab" onclick="gotoScreen('settings',this)">Cài đặt</button>
+    <button class="nav-tab" onclick="toggleKidsMode(this)" id="kidsNavTab" style="background:linear-gradient(135deg,rgba(255,179,71,0.2),rgba(255,126,95,0.2));border:1px solid rgba(255,179,71,0.3);color:#f0a060;">🧸 Trẻ em</button>
+  </div>
+  <div class="nav-actions">
+    <div class="icon-btn" onclick="openVoice()" title="Nhận dạng giọng nói thực (Web Speech API)">🎙️</div>
+    <div class="icon-btn" onclick="toggleTheme()" title="Đổi theme" id="themeBtn">🌙</div>
+  </div>
+</nav>
+
+<div id="app">
+
+<!-- ============================================================ SCREEN HOME -->
+<section class="screen active" id="screen-home">
+  <div class="home-inner">
+    <div class="breathing-orb-wrap">
+      <div class="orb-ring2"></div>
+      <div class="orb-ring"></div>
+      <div class="breathing-orb"></div>
+    </div>
+    <div class="home-eyebrow">Hệ thống phát hiện sớm cảm xúc · AI nhân văn</div>
+    <h1 class="home-title">Chào bạn.<br><em>Hôm nay bạn có thật sự ổn không?</em></h1>
+    <p class="home-sub">LUMEN lắng nghe. Không phán xét. Không chẩn đoán.<br>Chỉ đồng hành cùng bạn trước khi bạn cần.</p>
+    <div class="home-btns">
+      <button class="home-btn home-btn-primary" onclick="startChat('share')">
+        <span class="btn-emoji">🌿</span>
+        <div class="btn-text-wrap">
+          <span class="btn-label">Tôi muốn chia sẻ</span>
+          <span class="btn-desc">Kể cho LUMEN nghe điều bạn đang cảm thấy</span>
+        </div>
+      </button>
+      <button class="home-btn home-btn-secondary" onclick="startChat('unsure')">
+        <span class="btn-emoji">🌊</span>
+        <div class="btn-text-wrap">
+          <span class="btn-label">Tôi không chắc mình cảm thấy gì</span>
+          <span class="btn-desc">Để LUMEN giúp bạn nhận ra</span>
+        </div>
+      </button>
+      <button class="home-btn home-btn-ghost" onclick="gotoScreen('dashboard',null)">
+        <span class="btn-emoji">🌙</span>
+        <div class="btn-text-wrap">
+          <span class="btn-label">Tôi chỉ muốn xem</span>
+          <span class="btn-desc">Xem dashboard tổng quan</span>
+        </div>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCREEN CHAT -->
+<section class="screen" id="screen-chat">
+  <div class="chat-layout">
+    <div class="chat-main">
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-area">
+        <textarea id="chatInput" placeholder="Chia sẻ cảm xúc của bạn… LUMEN đang lắng nghe." rows="3"
+          oninput="autoResize(this)" onkeydown="onChatKey(event)"></textarea>
+        <div class="input-bar">
+          <div class="input-hints">
+            <div class="hint-chip" onclick="injectHint('Dạo này tôi cảm thấy mệt lắm')">Tôi mệt</div>
+            <div class="hint-chip" onclick="injectHint('Tôi ổn thôi, không có gì đáng nói')">Tôi ổn</div>
+            <div class="hint-chip" onclick="injectHint('Tôi không biết mình đang cảm thấy gì nữa')">Không biết</div>
+          </div>
+          <button class="send-btn" id="sendBtn" onclick="sendChat()">
+            Gửi <span>↗</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="chat-sidebar">
+      <div class="sidebar-card">
+        <h4>Điểm cảm xúc</h4>
+        <div class="score-ring-wrap">
+          <div class="score-ring">
+            <svg viewBox="0 0 100 100" width="100" height="100">
+              <circle class="ring-track" cx="50" cy="50" r="45"/>
+              <circle class="ring-fill" cx="50" cy="50" r="45" id="ringPath"/>
+            </svg>
+            <div class="ring-center">
+              <div class="ring-score" id="sideScore">—</div>
+              <div class="ring-label">/ 100</div>
+            </div>
+          </div>
+        </div>
+        <div class="risk-badge risk-stable" id="riskBadge">
+          <span class="risk-dot"></span>
+          <span id="riskText">Chưa phân tích</span>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <h4>Patterns phát hiện</h4>
+        <div class="pattern-grid">
+          <div class="pat-item" id="pat-self_negation"><span class="pat-icon">🔄</span>Tự phủ nhận cảm xúc</div>
+          <div class="pat-item" id="pat-emotional_suppression"><span class="pat-icon">🤐</span>Kìm nén cảm xúc</div>
+          <div class="pat-item" id="pat-withdrawal_language"><span class="pat-icon">🚪</span>Ngôn ngữ thu mình</div>
+          <div class="pat-item" id="pat-fatigue_signal"><span class="pat-icon">🪫</span>Kiệt sức</div>
+          <div class="pat-item" id="pat-self_blame"><span class="pat-icon">⚖️</span>Tự trách bản thân</div>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <h4>Lịch sử phiên này</h4>
+        <div class="mini-timeline" id="miniTimeline">
+          <div style="font-size:0.78rem;color:var(--cream3);opacity:0.6;text-align:center;padding:8px 0;">Chưa có lịch sử</div>
+        </div>
+      </div>
+
+      <div style="padding:14px 16px;background:rgba(196,115,90,0.06);border:1px solid var(--border2);border-radius:var(--r);font-size:0.72rem;color:var(--cream3);line-height:1.7;">
+        ⚠️ <strong style="color:var(--cream2)">LUMEN</strong> là công cụ hỗ trợ sớm. Không thay thế chuyên gia tâm lý.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCREEN DASHBOARD -->
+<section class="screen" id="screen-dashboard">
+  <div class="dashboard-grid">
+    <div class="dash-card">
+      <h3>📊 Điểm cảm xúc trung bình</h3>
+      <div class="stat-big" id="dashAvg">72</div>
+      <div class="stat-sub">Tuần này</div>
+      <div class="stat-trend trend-down">↓ 8 điểm so với tuần trước</div>
+    </div>
+    <div class="dash-card">
+      <h3>🔁 Lần tự trấn an</h3>
+      <div class="stat-big" id="dashReassure">14</div>
+      <div class="stat-sub">Lần nói "Tôi ổn" / "Không sao"</div>
+      <div class="stat-trend trend-up">↑ Cao hơn bình thường</div>
+    </div>
+    <div class="dash-card">
+      <h3>🌿 Chuỗi ổn định</h3>
+      <div class="stat-big">3</div>
+      <div class="stat-sub">ngày liên tiếp score ≥ 60</div>
+      <div class="stat-trend trend-flat">→ Ổn định</div>
+    </div>
+
+    <div class="dash-card wide">
+      <h3>🗓 Heatmap 7 ngày</h3>
+      <div id="heatmapGrid" class="heatmap-grid"></div>
+    </div>
+
+    <div class="dash-card">
+      <h3>🤐 Silence Pattern</h3>
+      <div class="silence-bars">
+        <div class="silence-bar-row">
+          <div class="silence-bar-label">Câu trả lời ngắn</div>
+          <div class="silence-bar-track"><div class="silence-bar-fill" style="width:72%;background:var(--amber);"></div></div>
+          <div class="silence-bar-val">72%</div>
+        </div>
+        <div class="silence-bar-row">
+          <div class="silence-bar-label">Phủ nhận cảm xúc</div>
+          <div class="silence-bar-track"><div class="silence-bar-fill" style="width:58%;background:var(--terra);"></div></div>
+          <div class="silence-bar-val">58%</div>
+        </div>
+        <div class="silence-bar-row">
+          <div class="silence-bar-label">Tự trách</div>
+          <div class="silence-bar-track"><div class="silence-bar-fill" style="width:34%;background:var(--rose);"></div></div>
+          <div class="silence-bar-val">34%</div>
+        </div>
+        <div class="silence-bar-row">
+          <div class="silence-bar-label">Thu mình</div>
+          <div class="silence-bar-track"><div class="silence-bar-fill" style="width:45%;background:var(--sky);"></div></div>
+          <div class="silence-bar-val">45%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-card full">
+      <h3>💬 Tooltip AI: Phát hiện lệch pha</h3>
+      <div style="background:var(--navy3);border:1px solid var(--border2);border-radius:var(--rs);padding:16px 20px;font-family:'Playfair Display',serif;font-style:italic;font-size:1rem;color:var(--cream2);line-height:1.8;">
+        "Tuần này bạn đã nói <span style="color:var(--terra2)">'Tôi ổn'</span> nhiều hơn bình thường — nhưng điểm năng lượng của bạn lại thấp hơn 20%. LUMEN nhận thấy có thể bạn đang cố gắng tỏ ra ổn định với người xung quanh nhiều hơn mức bạn thực sự cảm thấy."
+      </div>
+      <div style="margin-top:12px;font-size:0.8rem;color:var(--cream3);">Phân tích dựa trên 7 ngày gần nhất · Ẩn danh · Không lưu định danh</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCREEN TIMELINE -->
+<section class="screen" id="screen-timeline">
+  <div class="timeline-wrap">
+    <div class="timeline-header">
+      <div>
+        <h2>Dòng cảm xúc</h2>
+        <p>Biểu đồ sóng cảm xúc 14 ngày gần nhất</p>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <div class="hint-chip" onclick="redrawChart('2w')">2 tuần</div>
+        <div class="hint-chip" onclick="redrawChart('1m')">1 tháng</div>
+        <div class="hint-chip" onclick="redrawChart('3m')">3 tháng</div>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="timelineCanvas"></canvas>
+      <div class="chart-tooltip" id="chartTooltip"></div>
+    </div>
+
+    <div style="margin-top:28px;">
+      <div class="dash-card" style="background:var(--navy2);">
+        <h3>📌 Phát hiện "Im lặng kéo dài"</h3>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:4px;">
+          <div style="text-align:center;padding:16px;">
+            <div style="font-family:'Playfair Display',serif;font-size:2rem;color:var(--terra);">3</div>
+            <div style="font-size:0.75rem;color:var(--cream3);margin-top:4px;">ngày không chia sẻ</div>
+          </div>
+          <div style="text-align:center;padding:16px;">
+            <div style="font-family:'Playfair Display',serif;font-size:2rem;color:var(--amber);">×6</div>
+            <div style="font-size:0.75rem;color:var(--cream3);margin-top:4px;">lần tự trấn an liên tiếp</div>
+          </div>
+          <div style="text-align:center;padding:16px;">
+            <div style="font-family:'Playfair Display',serif;font-size:2rem;color:var(--sage);">↓18</div>
+            <div style="font-size:0.75rem;color:var(--cream3);margin-top:4px;">điểm drift trong 5 ngày</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCREEN SCHOOL -->
+<section class="screen" id="screen-school">
+  <div class="school-wrap">
+    <h2 style="font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--cream);margin-bottom:8px;">Cổng trường học ẩn danh</h2>
+    <p style="font-size:0.85rem;color:var(--cream3);margin-bottom:20px;">Dữ liệu tổng hợp, ẩn danh — dành cho giáo viên/tư vấn trường.</p>
+
+    <div class="anon-notice">
+      <span style="font-size:1.3rem;">🛡</span>
+      <div>Tất cả dữ liệu được <strong>ẩn danh hoàn toàn</strong>. Không có thông tin định danh cá nhân. Chỉ hiển thị xu hướng tổng thể của nhóm.</div>
+    </div>
+
+    <div style="margin-bottom:20px;font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);">Tổng quan lớp học</div>
+    <div class="class-grid">
+      <div class="class-card" onclick="classClick(this,'10A1','Cao')">
+        <div class="class-num">87</div>
+        <div class="class-label">Điểm TB · 10A1</div>
+        <div class="class-bar"><div class="class-bar-fill" style="width:87%;background:var(--sage);"></div></div>
+      </div>
+      <div class="class-card" onclick="classClick(this,'10A2','Trung bình')">
+        <div class="class-num" style="color:var(--amber)">62</div>
+        <div class="class-label">Điểm TB · 10A2</div>
+        <div class="class-bar"><div class="class-bar-fill" style="width:62%;background:var(--amber);"></div></div>
+      </div>
+      <div class="class-card" onclick="classClick(this,'11B1','Thấp')">
+        <div class="class-num" style="color:var(--rose)">38</div>
+        <div class="class-label">Điểm TB · 11B1</div>
+        <div class="class-bar"><div class="class-bar-fill" style="width:38%;background:var(--rose);"></div></div>
+      </div>
+      <div class="class-card" onclick="classClick(this,'11B2','Trung bình')">
+        <div class="class-num">71</div>
+        <div class="class-label">Điểm TB · 11B2</div>
+        <div class="class-bar"><div class="class-bar-fill" style="width:71%;background:var(--terra);"></div></div>
+      </div>
+    </div>
+
+    <div class="dash-card" style="background:var(--navy2);">
+      <h3>⚠️ Cảnh báo xu hướng (ẩn danh)</h3>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(196,90,106,0.08);border:1px solid rgba(196,90,106,0.2);border-radius:var(--rs);">
+          <span style="font-size:1.1rem;">🔴</span>
+          <div>
+            <div style="font-size:0.84rem;color:var(--cream2);font-weight:500;">Lớp 11B1 — Điểm cảm xúc trung bình giảm 22 điểm trong 2 tuần</div>
+            <div style="font-size:0.75rem;color:var(--cream3);margin-top:2px;">Khuyến nghị: Tăng cường hoạt động kết nối nhóm · Theo dõi sát hơn</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(212,168,75,0.08);border:1px solid rgba(212,168,75,0.2);border-radius:var(--rs);">
+          <span style="font-size:1.1rem;">🟡</span>
+          <div>
+            <div style="font-size:0.84rem;color:var(--cream2);font-weight:500;">Lớp 10A2 — Tần suất "Tôi ổn" cao bất thường trong 5 ngày</div>
+            <div style="font-size:0.75rem;color:var(--cream3);margin-top:2px;">Khuyến nghị: Tạo không gian chia sẻ an toàn trong lớp</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCREEN SETTINGS -->
+<section class="screen" id="screen-settings">
+  <div class="settings-wrap">
+    <h2>Tùy chỉnh LUMEN</h2>
+    <p>Cá nhân hóa trải nghiệm của bạn. Mọi thay đổi được lưu cục bộ, không gửi lên server.</p>
+
+    <div class="settings-group">
+      <h3>Giao diện</h3>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Chủ đề màu sắc</div>
+          <div class="setting-desc">Chọn gam màu phù hợp với tâm trạng bạn</div>
+        </div>
+        <div class="setting-control">
+          <div class="swatch-row">
+            <div class="swatch active" style="background:linear-gradient(135deg,#0e1117,#c4735a)" title="Navy Terracotta" onclick="setThemeColor(this,'navy')"></div>
+            <div class="swatch" style="background:linear-gradient(135deg,#faf8f4,#c4735a)" title="Cream Light" onclick="setThemeColor(this,'light')"></div>
+            <div class="swatch" style="background:linear-gradient(135deg,#1a1030,#8a78c4)" title="Deep Lavender" onclick="setThemeColor(this,'lavender')"></div>
+            <div class="swatch" style="background:linear-gradient(135deg,#0a1a0f,#6a9e82)" title="Forest" onclick="setThemeColor(this,'forest')"></div>
+          </div>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Font chữ</div>
+          <div class="setting-desc">Chọn font dễ đọc với bạn</div>
+        </div>
+        <div class="setting-control">
+          <div class="font-opts">
+            <div class="font-opt active" onclick="setFont(this,'Sora')" style="font-family:Sora">Sora</div>
+            <div class="font-opt" onclick="setFont(this,'Georgia')" style="font-family:Georgia;font-style:italic">Serif</div>
+            <div class="font-opt" onclick="setFont(this,'monospace')" style="font-family:monospace;font-size:0.75rem">Mono</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <h3>Trải nghiệm</h3>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Hiệu ứng animation</div>
+          <div class="setting-desc">Tắt nếu bạn nhạy cảm với chuyển động</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggleAnim" onclick="toggleSetting(this,'anim')"><div class="toggle-knob"></div></div>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Nhạc nền thư giãn</div>
+          <div class="setting-desc">Âm thanh binaural nhẹ khi sử dụng</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle" id="toggleSound" onclick="toggleSetting(this,'sound')"><div class="toggle-knob"></div></div>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Tự động chế độ tối theo giờ</div>
+          <div class="setting-desc">Bật dark mode tự động sau 19:00</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggleAutoTheme" onclick="toggleSetting(this,'autoTheme')"><div class="toggle-knob"></div></div>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Hiệu ứng hạt nền</div>
+          <div class="setting-desc">Tắt để tăng hiệu suất trên thiết bị cũ</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggleParticles" onclick="toggleSetting(this,'particles')"><div class="toggle-knob"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <h3>Quyền riêng tư</h3>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Lưu lịch sử phiên</div>
+          <div class="setting-desc">Lưu cục bộ trên thiết bị, không gửi server</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggleHistory" onclick="toggleSetting(this,'history')"><div class="toggle-knob"></div></div>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label" style="color:var(--rose)">Xóa tất cả dữ liệu cục bộ</div>
+          <div class="setting-desc">Không thể khôi phục</div>
+        </div>
+        <div class="setting-control">
+          <button style="padding:7px 16px;border-radius:50px;background:rgba(196,90,106,0.15);border:1px solid rgba(196,90,106,0.3);color:var(--rose);font-family:'Sora',sans-serif;font-size:0.78rem;cursor:pointer;" onclick="clearData()">Xóa dữ liệu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCREEN KIDS -->
+<section class="screen" id="screen-kids">
+  <div class="kids-wrap" id="kidsWrap">
+    <!-- Filled by JS -->
+  </div>
+</section>
+
+</div><!-- /app -->
+
+<!-- KIDS MODE FAB -->
+<div id="kidsModeBtn" onclick="toggleKidsMode(null)" title="Chế độ trẻ em">
+  🧸
+  <div class="kids-fab-tooltip">Chế độ Trẻ em</div>
+</div>
+
+<!-- RESULT OVERLAY -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-panel" id="resultPanel">
+    <div class="panel-close" onclick="closeResult()">✕</div>
+    <div class="result-orb stable" id="resultOrb">🌿</div>
+    <h2 id="resultTitle">Phân tích LUMEN</h2>
+    <p class="result-summary" id="resultSummary"></p>
+    <div class="tone-response" id="resultTone"></div>
+    <div class="rec-section">
+      <h4>Gợi ý hỗ trợ</h4>
+      <div class="rec-grid" id="recGrid"></div>
+    </div>
+    <div class="urgent-block" id="urgentBlock">
+      <div class="ub-icon">🕯</div>
+      <div>
+        <h5>Bạn không phải đi qua điều này một mình</h5>
+        <p>LUMEN nhận thấy bạn đang mang rất nhiều thứ trong im lặng. Dũng cảm tìm kiếm hỗ trợ là sức mạnh thật sự.</p>
+        <div class="hotline-num">📞 1800 599 920</div>
+        <p style="font-size:0.72rem;opacity:0.6;margin-top:4px;">Miễn phí · 24/7 · Đường dây sức khỏe tâm thần</p>
+      </div>
+    </div>
+    <div class="json-accordion">
+      <div class="json-toggle" onclick="toggleJson()">
+        <span style="font-size:0.9rem;">{}</span> Raw JSON output
+        <span id="jsonArrow" style="margin-left:auto;">▾</span>
+      </div>
+      <div class="json-body" id="jsonBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HOTLINE BANNER -->
+<div class="hotline-bar" id="hotlineBar">
+  <span>📞 Đường dây hỗ trợ khẩn cấp:</span>
+  <strong>1800 599 920</strong>
+  <span>· Miễn phí · 24/7</span>
+  <button class="hotline-close" onclick="document.getElementById('hotlineBar').classList.remove('show')">Đóng</button>
+</div>
+
+<!-- VOICE MODAL -->
+<div class="voice-modal" id="voiceModal">
+  <button class="voice-close" onclick="closeVoice()">✕ Đóng</button>
+  <div class="voice-orb"></div>
+  <div id="voiceModalTitle" style="font-size:0.9rem;font-weight:500;color:var(--cream);margin-bottom:12px;">🎙️ Nhận dạng giọng nói</div>
+  <div class="voice-text" id="voiceText">
+    "Bạn không yếu đuối vì cảm thấy mệt.<br>Bạn chỉ đang mang nhiều thứ hơn bạn nghĩ."
+  </div>
+  <p style="font-size:0.78rem;color:rgba(245,240,232,0.35);margin-top:20px;">Chế độ giọng nói · Bấm bất kỳ đâu để đóng</p>
+</div>
+
+<script>
+/* ============================================================
+   LUMEN ADVANCED — JAVASCRIPT ENGINE
+   ============================================================ */
+
+// ── STATE (using let, NOT const for reassignable values) ──────
+let state = {
+  currentScreen: 'home',
+  theme: 'dark',
+  score: null,
+  riskLevel: 'stable',
+  patterns: [],
+  sessionHistory: [],
+  chatHistory: [],
+  analysisCount: 0,
+  settings: {
+    anim: true, sound: false,
+    autoTheme: true, particles: true, history: true
+  }
+};
+
+// ── CURSOR ────────────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursor-ring');
+let cx = 0, cy = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => {
+  cx = e.clientX; cy = e.clientY;
+  cursor.style.left = cx + 'px'; cursor.style.top = cy + 'px';
+  requestAnimationFrame(() => {
+    rx += (cx - rx) * 0.18;
+    ry += (cy - ry) * 0.18;
+    cursorRing.style.left = rx + 'px'; cursorRing.style.top = ry + 'px';
+  });
+});
+document.addEventListener('mousedown', () => {
+  cursor.style.width = '18px'; cursor.style.height = '18px';
+});
+document.addEventListener('mouseup', () => {
+  cursor.style.width = '12px'; cursor.style.height = '12px';
+});
+
+// ── PARTICLES ─────────────────────────────────────────────────
+const pCanvas = document.getElementById('particles');
+const pCtx = pCanvas.getContext('2d');
+let particles = [];
+let pAnimId;
+
+function resizeParticles() {
+  pCanvas.width = window.innerWidth;
+  pCanvas.height = window.innerHeight;
+}
+
+function initParticles() {
+  resizeParticles();
+  particles = Array.from({length: 60}, () => ({
+    x: Math.random() * pCanvas.width,
+    y: Math.random() * pCanvas.height,
+    r: Math.random() * 1.5 + 0.3,
+    vx: (Math.random() - 0.5) * 0.3,
+    vy: (Math.random() - 0.5) * 0.3,
+    opacity: Math.random() * 0.4 + 0.1
+  }));
+}
+
+function animParticles() {
+  pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0) p.x = pCanvas.width;
+    if (p.x > pCanvas.width) p.x = 0;
+    if (p.y < 0) p.y = pCanvas.height;
+    if (p.y > pCanvas.height) p.y = 0;
+    pCtx.beginPath();
+    pCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    pCtx.fillStyle = `rgba(196,115,90,${p.opacity})`;
+    pCtx.fill();
+  });
+  pAnimId = requestAnimationFrame(animParticles);
+}
+
+window.addEventListener('resize', resizeParticles);
+initParticles(); animParticles();
+
+// ── THEME ─────────────────────────────────────────────────────
+const hour = new Date().getHours();
+if (hour >= 19 || hour < 6) {
+  document.documentElement.setAttribute('data-theme','dark');
+  state.theme = 'dark';
+} else {
+  document.documentElement.setAttribute('data-theme','light');
+  state.theme = 'light';
+  document.getElementById('themeBtn').textContent = '☀️';
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  state.theme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', state.theme);
+  document.getElementById('themeBtn').textContent = state.theme === 'dark' ? '🌙' : '☀️';
+  // ✅ FIX: redraw timeline canvas after theme change so colors update
+  if (state.currentScreen === 'timeline') setTimeout(drawTimeline, 50);
+}
+
+// ── NAVIGATION — see patched version at bottom of file ────────
+function gotoScreen_UNUSED(id, tabEl) {
+  // legacy — replaced by patched version at bottom
+  const tabs = document.querySelectorAll('.nav-tab');
+  const map = {home:0,chat:1,dashboard:2,timeline:3,school:4,settings:5};
+  state.currentScreen = id;
+}
+
+// ── CHAT ENGINE ───────────────────────────────────────────────
+const SYSTEM = `You are LUMEN AI – an empathetic early-warning emotional support system.
+You are NOT a medical diagnostic system. You do NOT label users with disorders. You do NOT judge.
+Detect emotional deviation patterns, prolonged silence signals, defensive language patterns.
+Suggest early supportive actions.
+Analyze tone, emotional negation frequency, self-blame patterns, withdrawal indicators.
+Output ONLY valid JSON, nothing else:
+{
+  "emotional_state_score": <0-100>,
+  "risk_level": "<stable|monitor|early_support>",
+  "detected_patterns": ["<from: self_negation,emotional_suppression,withdrawal_language,fatigue_signal,self_blame>"],
+  "summary": "<2-3 sentence empathetic explanation in user's language>",
+  "support_recommendation": ["<from: breathing_exercise,journal_prompt,connect_with_someone,seek_professional_support_if_needed,rest_and_self_care,mindful_moment>"],
+  "tone_response": "<warm personalized 2-4 sentence message in user's language>"
+}
+If risk_level is early_support, add: "urgent_support": true`;
+
+const recMap = {
+  breathing_exercise: {icon:'🫁',title:'Bài thở 4-7-8',desc:'Hít 4s · Giữ 7s · Thở ra 8s. Lặp 4 vòng.'},
+  journal_prompt: {icon:'✍️',title:'Viết nhật ký',desc:'5 phút mỗi tối — không cần hay, chỉ cần thật.'},
+  connect_with_someone: {icon:'🤝',title:'Kết nối ai đó',desc:'Nhắn cho một người bạn tin tưởng.'},
+  seek_professional_support_if_needed: {icon:'💬',title:'Gặp chuyên gia',desc:'Khi cần hỗ trợ chuyên sâu hơn.'},
+  rest_and_self_care: {icon:'🌿',title:'Nghỉ ngơi',desc:'Cho phép mình dừng lại. Nghỉ ngơi là sức mạnh.'},
+  mindful_moment: {icon:'🧘',title:'Khoảnh khắc tĩnh',desc:'1 phút — chỉ cảm nhận hơi thở.'},
+};
+
+function startChat(mode) {
+  gotoScreen('chat', document.querySelectorAll('.nav-tab')[1]);
+  const msgs = document.getElementById('chatMessages');
+  msgs.innerHTML = '';
+  state.chatHistory = [];
+  state.sessionHistory = [];
+  updateMiniTimeline();
+
+  setTimeout(() => {
+    if (mode === 'share') {
+      addAiMsg('Chào bạn. Tôi ở đây lắng nghe. Hôm nay bạn đang cảm thấy thế nào?');
+    } else {
+      addAiMsg('Không biết mình đang cảm thấy gì — điều đó cũng bình thường lắm. Hãy thử với câu hỏi này nhé:');
+      setTimeout(() => addColorQuestion(), 600);
+    }
+  }, 200);
+}
+
+function addColorQuestion() {
+  const colors = [
+    {c:'#4a7fb5',label:'Xanh dương',meaning:'bình yên'},
+    {c:'#6a9e82',label:'Xanh lá',meaning:'hy vọng'},
+    {c:'#d4a84b',label:'Vàng',meaning:'vui vẻ'},
+    {c:'#c4735a',label:'Cam',meaning:'ấm nhưng mệt'},
+    {c:'#8a78c4',label:'Tím',meaning:'u buồn'},
+    {c:'#888',label:'Xám',meaning:'trống rỗng'},
+    {c:'#2a2420',label:'Tối',meaning:'nặng nề'},
+  ];
+  const html = `<div style="font-size:0.88rem;color:var(--cream2);margin-bottom:10px;">Nếu cảm xúc hôm nay là một màu sắc, nó sẽ là…?</div>
+    <div class="color-picker-msg">
+      ${colors.map(c => `<div class="color-orb" style="background:${c.c}" title="${c.label} — ${c.meaning}" onclick="pickColor(this,'${c.label}','${c.meaning}')"></div>`).join('')}
+    </div>`;
+  addAiMsgRaw(html);
+}
+
+function pickColor(el, label, meaning) {
+  el.closest('.color-picker-msg').querySelectorAll('.color-orb').forEach(o => o.classList.remove('picked'));
+  el.classList.add('picked');
+  addUserMsg(`Màu ${label} — ${meaning}`);
+  setTimeout(() => {
+    addAiMsg(`Màu ${label}... ${meaning}. Cảm ơn bạn đã chia sẻ điều đó. Bạn có muốn kể thêm không?`);
+  }, 500);
+}
+
+function addScaleQuestion() {
+  const html = `<div style="font-size:0.88rem;color:var(--cream2);margin-bottom:10px;">Năng lượng của bạn hôm nay từ 1–10?</div>
+    <div class="scale-msg">
+      ${[1,2,3,4,5,6,7,8,9,10].map(n => `<div class="scale-btn" onclick="pickScale(this,${n})">${n}</div>`).join('')}
+    </div>`;
+  addAiMsgRaw(html);
+}
+
+function pickScale(el, n) {
+  el.closest('.scale-msg').querySelectorAll('.scale-btn').forEach(b => b.classList.remove('picked'));
+  el.classList.add('picked');
+  addUserMsg(`Năng lượng: ${n}/10`);
+  const resp = n <= 3 ? 'Năng lượng khá thấp. Bạn có đang ngủ đủ giấc không?' :
+               n <= 6 ? 'Mức trung bình — không tệ nhưng cũng không tốt hẳn. Có điều gì đang kéo bạn xuống không?' :
+               'Khá ổn! Điều gì đang giúp bạn duy trì được năng lượng vậy?';
+  setTimeout(() => addAiMsg(resp), 500);
+}
+
+function injectHint(text) {
+  document.getElementById('chatInput').value = text;
+  document.getElementById('chatInput').focus();
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+}
+
+function onChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  document.getElementById('sendBtn').disabled = true;
+  addUserMsg(text);
+  input.value = ''; input.style.height = 'auto';
+  state.chatHistory.push({role:'user', content: text});
+  // ✅ FIX: sliding window — keep last 30 messages to avoid token overflow
+  if (state.chatHistory.length > 30) state.chatHistory = state.chatHistory.slice(-30);
+
+  const thinking = addThinking();
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM,
+        messages: state.chatHistory
+      })
+    });
+    const data = await res.json();
+    thinking.remove();
+
+    const raw = data.content?.[0]?.text || '';
+    let json;
+    try {
+      json = JSON.parse(raw.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());
+    } catch(e) {
+      addAiMsg('Xin lỗi, có lỗi xử lý. Vui lòng thử lại.');
+      document.getElementById('sendBtn').disabled = false;
+      return;
+    }
+
+    state.chatHistory.push({role:'assistant', content: raw});
+    state.analysisCount++;
+    updateSidebar(json);
+    addAiMsg(json.tone_response || json.summary || '...');
+    saveToHistory(text, json);
+    showResultOverlay(json);
+    if (json.urgent_support) document.getElementById('hotlineBar').classList.add('show');
+
+  } catch(e) {
+    thinking.remove();
+    addAiMsg('Không thể kết nối LUMEN AI. Vui lòng kiểm tra kết nối.');
+  }
+  document.getElementById('sendBtn').disabled = false;
+  scrollChat();
+}
+
+function addUserMsg(text) {
+  const t = now();
+  const d = document.createElement('div');
+  d.className = 'msg user';
+  d.innerHTML = `<div class="msg-avatar user-av">👤</div>
+    <div class="msg-body"><div class="bubble">${esc(text)}</div><div class="msg-time">${t}</div></div>`;
+  document.getElementById('chatMessages').appendChild(d);
+  scrollChat();
+}
+
+function addAiMsg(text) {
+  const t = now();
+  const d = document.createElement('div');
+  d.className = 'msg ai';
+  d.innerHTML = `<div class="msg-avatar ai-av">✦</div>
+    <div class="msg-body"><div class="bubble">${esc(text)}</div><div class="msg-time">LUMEN · ${t}</div></div>`;
+  document.getElementById('chatMessages').appendChild(d);
+  scrollChat();
+  return d;
+}
+
+function addAiMsgRaw(html) {
+  const t = now();
+  const d = document.createElement('div');
+  d.className = 'msg ai';
+  d.innerHTML = `<div class="msg-avatar ai-av">✦</div>
+    <div class="msg-body"><div class="bubble">${html}</div><div class="msg-time">LUMEN · ${t}</div></div>`;
+  document.getElementById('chatMessages').appendChild(d);
+  scrollChat();
+}
+
+function addThinking() {
+  const d = document.createElement('div');
+  d.className = 'msg ai';
+  d.innerHTML = `<div class="msg-avatar ai-av">✦</div>
+    <div class="msg-body">
+      <div class="thinking-msg">
+        <span>LUMEN đang phân tích</span>
+        <div class="dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>`;
+  document.getElementById('chatMessages').appendChild(d);
+  scrollChat();
+  return d;
+}
+
+function scrollChat() {
+  const m = document.getElementById('chatMessages');
+  m.scrollTop = m.scrollHeight;
+}
+
+// ── SIDEBAR UPDATE ─────────────────────────────────────────────
+function updateSidebar(json) {
+  const score = json.emotional_state_score ?? 50;
+  state.score = score;
+  state.riskLevel = json.risk_level || 'stable';
+  state.patterns = json.detected_patterns || [];
+
+  document.getElementById('sideScore').textContent = score;
+  const circ = 2 * Math.PI * 45;
+  const offset = circ * (1 - score / 100);
+  const ring = document.getElementById('ringPath');
+  ring.style.strokeDasharray = circ;
+  ring.style.strokeDashoffset = offset;
+  ring.style.stroke = score >= 60 ? 'var(--sage)' : score >= 40 ? 'var(--amber)' : 'var(--rose)';
+
+  const badge = document.getElementById('riskBadge');
+  const labels = {stable:'Ổn định',monitor:'Cần theo dõi',early_support:'Cần hỗ trợ sớm'};
+  badge.className = 'risk-badge risk-' + (state.riskLevel === 'early_support' ? 'early' : state.riskLevel);
+  document.getElementById('riskText').textContent = labels[state.riskLevel] || 'Ổn định';
+
+  const allPats = ['self_negation','emotional_suppression','withdrawal_language','fatigue_signal','self_blame'];
+  allPats.forEach(p => {
+    const el = document.getElementById('pat-' + p);
+    if (el) el.classList.toggle('hit', state.patterns.includes(p));
+  });
+}
+
+function saveToHistory(text, json) {
+  state.sessionHistory.unshift({text, json, time: new Date()});
+  updateMiniTimeline();
+}
+
+function updateMiniTimeline() {
+  const tl = document.getElementById('miniTimeline');
+  if (!state.sessionHistory.length) {
+    tl.innerHTML = '<div style="font-size:0.78rem;color:var(--cream3);opacity:0.6;text-align:center;padding:8px 0;">Chưa có lịch sử</div>';
+    return;
+  }
+  const colors = {stable:'var(--sage)',monitor:'var(--amber)',early_support:'var(--rose)'};
+  tl.innerHTML = state.sessionHistory.slice(0,4).map(h => {
+    const c = colors[h.json.risk_level] || colors.stable;
+    return `<div class="tl-item">
+      <div class="tl-date">${h.time.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</div>
+      <div class="tl-preview">${esc(h.text.substring(0,45))}…</div>
+      <span class="tl-chip" style="background:${c}20;color:${c}">${h.json.emotional_state_score} điểm</span>
+    </div>`;
+  }).join('');
+}
+
+// ── RESULT OVERLAY ─────────────────────────────────────────────
+function showResultOverlay(json) {
+  const orb = document.getElementById('resultOrb');
+  const oc = {stable:'stable',monitor:'monitor',early_support:'early'};
+  const oe = {stable:'🌿',monitor:'🌤',early_support:'🕯'};
+  const titles = {stable:'Bạn đang khá ổn',monitor:'Bạn đang mang điều gì đó',early_support:'Bạn cần được lắng nghe'};
+  const rl = json.risk_level || 'stable';
+  orb.className = 'result-orb ' + (oc[rl]||'stable');
+  orb.textContent = oe[rl]||'🌿';
+  document.getElementById('resultTitle').textContent = titles[rl]||'';
+  document.getElementById('resultSummary').textContent = json.summary || '';
+  document.getElementById('resultTone').textContent = json.tone_response || '';
+
+  const grid = document.getElementById('recGrid');
+  grid.innerHTML = (json.support_recommendation||[]).map(r => {
+    const m = recMap[r]||{icon:'💡',title:r,desc:''};
+    return `<div class="rec-card"><div class="rc-icon">${m.icon}</div><div class="rc-title">${m.title}</div><div class="rc-desc">${m.desc}</div></div>`;
+  }).join('');
+
+  const ub = document.getElementById('urgentBlock');
+  ub.classList.toggle('show', !!json.urgent_support);
+
+  // JSON pretty
+  const jStr = JSON.stringify(json, null, 2)
+    .replace(/"([^"]+)":/g, '<span class="jk">"$1"</span>:')
+    .replace(/: "([^"]+)"/g, ': <span class="jv">"$1"</span>')
+    .replace(/: (\d+)/g, ': <span class="jn">$1</span>')
+    .replace(/: (true|false)/g, ': <span class="jb">$1</span>');
+  document.getElementById('jsonBody').innerHTML = jStr;
+  document.getElementById('jsonBody').classList.remove('open');
+  document.getElementById('jsonArrow').textContent = '▾';
+
+  document.getElementById('resultOverlay').classList.add('open');
+}
+
+function closeResult() {
+  document.getElementById('resultOverlay').classList.remove('open');
+}
+document.getElementById('resultOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('resultOverlay')) closeResult();
+});
+
+function toggleJson() {
+  const body = document.getElementById('jsonBody');
+  body.classList.toggle('open');
+  document.getElementById('jsonArrow').textContent = body.classList.contains('open') ? '▴' : '▾';
+}
+
+// ── TIMELINE CHART ─────────────────────────────────────────────
+function drawTimeline(range) {
+  const canvas = document.getElementById('timelineCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth; const H = 260;
+  canvas.width = W; canvas.height = H;
+
+  // Generate demo data
+  const pts = range === '1m' ? 30 : range === '3m' ? 90 : 14;
+  const data = Array.from({length:pts}, (_,i) => {
+    const base = 65 + 15 * Math.sin(i * 0.4);
+    return Math.max(20, Math.min(95, base + (Math.random()-0.5)*20));
+  });
+  const days = ['T2','T3','T4','T5','T6','T7','CN'];
+
+  const pad = {t:20,r:20,b:40,l:40};
+  const cW = W - pad.l - pad.r;
+  const cH = H - pad.t - pad.b;
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const textColor = isDark ? 'rgba(245,240,232,0.35)' : 'rgba(42,32,24,0.4)';
+  const gridColor = isDark ? 'rgba(245,240,232,0.06)' : 'rgba(42,32,24,0.08)';
+
+  ctx.clearRect(0,0,W,H);
+
+  // Grid
+  [0,25,50,75,100].forEach(v => {
+    const y = pad.t + cH * (1 - v/100);
+    ctx.strokeStyle = gridColor; ctx.lineWidth = 1;
+    ctx.setLineDash([4,6]);
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+    ctx.fillStyle = textColor; ctx.font = '11px Sora';
+    ctx.fillText(v, 8, y+4);
+  });
+  ctx.setLineDash([]);
+
+  // Points
+  const xs = data.map((_,i) => pad.l + (i/(data.length-1))*cW);
+  const ys = data.map(v => pad.t + cH*(1-v/100));
+
+  // Area fill
+  const grad = ctx.createLinearGradient(0, pad.t, 0, H-pad.b);
+  grad.addColorStop(0, 'rgba(196,115,90,0.25)');
+  grad.addColorStop(1, 'rgba(196,115,90,0)');
+  ctx.beginPath();
+  ctx.moveTo(xs[0], H-pad.b);
+  xs.forEach((x,i) => {
+    if (i === 0) ctx.lineTo(x, ys[i]);
+    else {
+      const cp1x = xs[i-1] + (x-xs[i-1])/2;
+      ctx.bezierCurveTo(cp1x, ys[i-1], cp1x, ys[i], x, ys[i]);
+    }
+  });
+  ctx.lineTo(xs[xs.length-1], H-pad.b);
+  ctx.fillStyle = grad; ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  xs.forEach((x,i) => {
+    if (i === 0) ctx.moveTo(x, ys[i]);
+    else {
+      const cp1x = xs[i-1] + (x-xs[i-1])/2;
+      ctx.bezierCurveTo(cp1x, ys[i-1], cp1x, ys[i], x, ys[i]);
+    }
+  });
+  ctx.strokeStyle = 'var(--terra)'; ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Dots
+  xs.forEach((x,i) => {
+    ctx.beginPath(); ctx.arc(x, ys[i], 4, 0, Math.PI*2);
+    ctx.fillStyle = data[i] >= 60 ? 'var(--sage)' : data[i] >= 40 ? 'var(--amber)' : 'var(--rose)';
+    ctx.fill();
+    ctx.strokeStyle = isDark ? '#1c2333' : '#faf8f4'; ctx.lineWidth = 2; ctx.stroke();
+  });
+
+  // X labels (show every 2nd or 3rd)
+  const step = pts > 20 ? 7 : pts > 10 ? 3 : 1;
+  data.forEach((_,i) => {
+    if (i % step !== 0) return;
+    ctx.fillStyle = textColor; ctx.font = '11px Sora'; ctx.textAlign = 'center';
+    const label = pts <= 14 ? days[i % 7] : `${i+1}`;
+    ctx.fillText(label, xs[i], H-8);
+  });
+
+  // Hover
+  canvas.onmousemove = e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    let closest = 0;
+    let minD = Infinity;
+    xs.forEach((x,i) => { if (Math.abs(x-mx) < minD) { minD = Math.abs(x-mx); closest = i; }});
+    const tip = document.getElementById('chartTooltip');
+    const msgs = [
+      'Ngày bình thường',
+      'Hôm nay bạn nói "Tôi ổn" 4 lần',
+      'Năng lượng thấp bất thường',
+      'Điểm cảm xúc ổn định',
+      'Phát hiện dấu hiệu kiệt sức nhẹ'
+    ];
+    tip.innerHTML = `<strong>${data[closest].toFixed(0)} điểm</strong><br>${msgs[closest%msgs.length]}`;
+    tip.style.left = (xs[closest] + 10) + 'px';
+    tip.style.top = (ys[closest] - 40) + 'px';
+    tip.classList.add('visible');
+  };
+  canvas.onmouseleave = () => {
+    document.getElementById('chartTooltip').classList.remove('visible');
+  };
+}
+
+function redrawChart(r) { drawTimeline(r); }
+
+// ── HEATMAP ────────────────────────────────────────────────────
+function buildHeatmap() {
+  const grid = document.getElementById('heatmapGrid');
+  const days = ['T2','T3','T4','T5','T6','T7','CN'];
+  const scores = [72,68,80,45,62,55,71];
+  grid.innerHTML = days.map((d,i) => {
+    const s = scores[i];
+    const cls = s >= 70 ? 'heat-1' : s >= 50 ? 'heat-2' : 'heat-3';
+    return `<div class="heat-cell ${cls}">
+      <span class="heat-day">${d}</span>
+      <span class="heat-score">${s}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────
+function toggleSetting(el, key) {
+  el.classList.toggle('on');
+  state.settings[key] = el.classList.contains('on');
+  if (key === 'particles') {
+    document.getElementById('particles').style.opacity = state.settings.particles ? '0.35' : '0';
+  }
+}
+
+function setFont(el, font) {
+  document.querySelectorAll('.font-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  document.body.style.fontFamily = font + ', sans-serif';
+}
+
+function setThemeColor(el, theme) {
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  if (theme === 'light') {
+    document.documentElement.setAttribute('data-theme','light');
+    state.theme = 'light';
+    document.getElementById('themeBtn').textContent = '☀️';
+  } else {
+    document.documentElement.setAttribute('data-theme','dark');
+    state.theme = 'dark';
+    document.getElementById('themeBtn').textContent = '🌙';
+  }
+}
+
+function clearData() {
+  if (confirm('Xóa tất cả dữ liệu cục bộ? Không thể khôi phục.')) {
+    state.sessionHistory = [];
+    state.chatHistory = [];
+    state.analysisCount = 0;
+    updateMiniTimeline();
+    alert('Đã xóa.');
+  }
+}
+
+// ── SCHOOL PORTAL ──────────────────────────────────────────────
+function classClick(el, cls, level) {
+  const tips = {
+    Cao: `Lớp ${cls} đang có xu hướng cảm xúc tốt. Tiếp tục duy trì các hoạt động tích cực.`,
+    'Trung bình': `Lớp ${cls} ở mức trung bình. Theo dõi các học sinh có dấu hiệu thu mình.`,
+    Thấp: `Lớp ${cls} cần chú ý đặc biệt. Khuyến nghị tư vấn nhóm ngay tuần này.`
+  };
+  alert('📊 ' + (tips[level] || ''));
+}
+
+// ── VOICE ─────────────────────────────────────────────────────
+// ✅ FIX: Real Web Speech API voice input
+let voiceRecognition = null;
+let isVoiceActive = false;
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function openVoice() {
+  if (!SpeechRecognitionAPI) {
+    document.getElementById('voiceModalTitle').textContent = '⚠️ Không hỗ trợ Voice';
+    document.getElementById('voiceText').innerHTML = 'Trình duyệt không hỗ trợ nhận dạng giọng nói.<br>Hãy thử Chrome hoặc Edge.<br><br>Hít vào thật sâu… thở ra nhẹ nhàng. 🫁';
+    document.getElementById('voiceModal').classList.add('open');
+    return;
+  }
+  if (isVoiceActive) { stopVoiceRecording(); return; }
+
+  voiceRecognition = new SpeechRecognitionAPI();
+  voiceRecognition.lang = 'vi-VN';
+  voiceRecognition.interimResults = true;
+  voiceRecognition.continuous = false;
+
+  voiceRecognition.onstart = () => {
+    isVoiceActive = true;
+    document.getElementById('voiceModalTitle').textContent = '🎙️ Đang lắng nghe...';
+    document.getElementById('voiceText').innerHTML = '<em style="opacity:.6;font-style:italic;">Hãy nói cảm xúc của bạn...</em>';
+    document.getElementById('voiceModal').classList.add('open');
+  };
+
+  voiceRecognition.onresult = (e) => {
+    let interim = '', final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    document.getElementById('voiceText').innerHTML = (final || interim)
+      ? '<strong>"' + (final || interim) + '"</strong>' 
+      : '<em style="opacity:.6">Đang nghe...</em>';
+    if (final) {
+      const inp = document.getElementById('chatInput');
+      inp.value = (inp.value + ' ' + final).trim();
+      autoResize(inp);
+    }
+  };
+
+  voiceRecognition.onerror = (e) => {
+    let msg = 'Lỗi nhận dạng giọng nói.';
+    if (e.error === 'not-allowed') msg = '⚠️ Cần cấp quyền microphone trong trình duyệt.';
+    if (e.error === 'network')     msg = '⚠️ Lỗi mạng khi nhận dạng.';
+    document.getElementById('voiceText').textContent = msg;
+    setTimeout(closeVoice, 2500);
+    isVoiceActive = false;
+  };
+
+  voiceRecognition.onend = () => {
+    isVoiceActive = false;
+    document.getElementById('voiceModalTitle').textContent = '✓ Đã ghi nhận — text đã điền vào chat';
+    setTimeout(closeVoice, 1500);
+  };
+
+  try { voiceRecognition.start(); }
+  catch(e) { console.warn('Voice start error:', e); }
+}
+
+function stopVoiceRecording() {
+  if (voiceRecognition) { try { voiceRecognition.stop(); } catch(e) {} }
+  isVoiceActive = false;
+  closeVoice();
+}
+
+function closeVoice() { document.getElementById('voiceModal').classList.remove('open'); isVoiceActive = false; }
+document.getElementById('voiceModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('voiceModal')) closeVoice();
+});
+
+// ── HELPERS ────────────────────────────────────────────────────
+function now() { return new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}); }
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+buildHeatmap();
+
+// ============================================================
+// KIDS MODE ENGINE
+// ============================================================
+let kidsState = {
+  active: false,
+  step: 0,
+  answers: {},
+  finished: false,
+};
+
+const KIDS_STEPS = [
+  {
+    id: 'feeling',
+    question: 'Hôm nay bạn đang cảm thấy thế nào? 🌈',
+    type: 'faces',
+    options: [
+      { emoji: '😄', label: 'Vui lắm!',   desc: 'Hôm nay thật tuyệt', score: 90 },
+      { emoji: '🙂', label: 'Ổn thôi',    desc: 'Bình thường bình thường', score: 70 },
+      { emoji: '😐', label: 'Bình bình',   desc: 'Không vui cũng không buồn', score: 55 },
+      { emoji: '😔', label: 'Hơi buồn',   desc: 'Có chút gì đó nặng nặng', score: 35 },
+      { emoji: '😢', label: 'Buồn lắm',   desc: 'Muốn khóc hoặc im lặng', score: 20 },
+      { emoji: '😡', label: 'Bực bội',    desc: 'Có gì đó làm mình khó chịu', score: 30 },
+    ],
+  },
+  {
+    id: 'color',
+    question: 'Nếu cảm xúc của bạn là một màu, đó sẽ là màu gì? 🎨',
+    type: 'colors',
+    options: [
+      { emoji: '☀️', color: '#FFD700', label: 'Vàng', meaning: 'vui vẻ, ấm áp' },
+      { emoji: '🌊', color: '#4A90D9', label: 'Xanh dương', meaning: 'bình yên, mát mẻ' },
+      { emoji: '🌿', color: '#5CAF6A', label: 'Xanh lá', meaning: 'hy vọng, tươi tắn' },
+      { emoji: '🌸', color: '#E88AAA', label: 'Hồng', meaning: 'dịu dàng, mơ mộng' },
+      { emoji: '🌌', color: '#7A6AC4', label: 'Tím', meaning: 'suy nghĩ nhiều, lặng lẽ' },
+      { emoji: '🌧️', color: '#9AAABB', label: 'Xám', meaning: 'trống rỗng, mệt mỏi' },
+    ],
+  },
+  {
+    id: 'energy',
+    question: 'Năng lượng hôm nay của bạn là mấy ngôi sao? ⭐',
+    type: 'stars',
+    max: 5,
+  },
+  {
+    id: 'alone',
+    question: 'Có điều gì bạn đang giữ trong lòng mà chưa kể cho ai không? 🤫',
+    type: 'choices',
+    options: [
+      { emoji: '🙅', label: 'Không, tôi hay kể cho người thân', weight: 0 },
+      { emoji: '🤔', label: 'Có đôi chút, nhưng không sao',     weight: 1 },
+      { emoji: '🤐', label: 'Có, nhưng không biết nói với ai',  weight: 2 },
+      { emoji: '😶', label: 'Có, tôi thường giữ mọi thứ một mình', weight: 3 },
+    ],
+  },
+  {
+    id: 'help',
+    question: 'Bạn muốn làm gì để cảm thấy tốt hơn? 💛',
+    type: 'choices',
+    options: [
+      { emoji: '🎮', label: 'Chơi hoặc vẽ tranh',       weight: 0 },
+      { emoji: '🤗', label: 'Được ôm hoặc nói chuyện',  weight: 0 },
+      { emoji: '😴', label: 'Nghỉ ngơi và ngủ thêm',    weight: 1 },
+      { emoji: '🙏', label: 'Tôi không biết nữa',        weight: 2 },
+    ],
+  },
+];
+
+function calcKidsResult() {
+  const feeling = KIDS_STEPS[0].options.find(o => o.emoji === kidsState.answers.feeling);
+  const energy  = kidsState.answers.energy || 3;
+  const alone   = KIDS_STEPS[3].options.find(o => o.label === kidsState.answers.alone);
+  const help    = KIDS_STEPS[4].options.find(o => o.label === kidsState.answers.help);
+
+  let score = (feeling ? feeling.score : 60);
+  score = score * 0.5 + (energy / 5) * 100 * 0.3;
+  score -= ((alone ? alone.weight : 0) * 6);
+  score -= ((help  ? help.weight  : 0) * 4);
+  score = Math.max(10, Math.min(98, Math.round(score)));
+
+  let level = 'stable';
+  if (score < 40) level = 'early_support';
+  else if (score < 62) level = 'monitor';
+
+  return { score, level };
+}
+
+function toggleKidsMode(tabEl) {
+  kidsState.active = !kidsState.active;
+  document.body.classList.toggle('kids-mode', kidsState.active);
+  const fab = document.getElementById('kidsModeBtn');
+  const navTab = document.getElementById('kidsNavTab');
+
+  if (kidsState.active) {
+    fab.innerHTML = '❌<div class="kids-fab-tooltip">Thoát chế độ Trẻ em</div>';
+    if (navTab) { navTab.style.background = 'linear-gradient(135deg,rgba(255,179,71,0.45),rgba(255,126,95,0.45))'; }
+    // reset kids session
+    kidsState.step = 0;
+    kidsState.answers = {};
+    kidsState.finished = false;
+    gotoScreen('kids', tabEl);
+    renderKidsScreen();
+  } else {
+    fab.innerHTML = '🧸<div class="kids-fab-tooltip">Chế độ Trẻ em</div>';
+    if (navTab) { navTab.style.background = 'linear-gradient(135deg,rgba(255,179,71,0.2),rgba(255,126,95,0.2))'; }
+    gotoScreen('home', document.querySelectorAll('.nav-tab')[0]);
+  }
+}
+
+function renderKidsScreen() {
+  const wrap = document.getElementById('kidsWrap');
+  if (kidsState.finished) { renderKidsResult(wrap); return; }
+
+  const step = KIDS_STEPS[kidsState.step];
+  const dotsHtml = KIDS_STEPS.map((_, i) => {
+    const cls = i < kidsState.step ? 'done' : i === kidsState.step ? 'active' : '';
+    return `<div class="kids-dot ${cls}"></div>`;
+  }).join('');
+
+  let inputHtml = '';
+
+  if (step.type === 'faces') {
+    inputHtml = `<div class="kids-faces">
+      ${step.options.map(o => `
+        <div class="kids-face" onclick="kidsPickFace(this,'${o.emoji}')">
+          <span class="face-emoji">${o.emoji}</span>
+          <span class="face-label">${o.label}</span>
+          <span class="face-desc">${o.desc}</span>
+        </div>`).join('')}
+    </div>`;
+  }
+  else if (step.type === 'colors') {
+    inputHtml = `<div class="kids-colors">
+      ${step.options.map(o => `
+        <div class="kids-color-btn" style="background:${o.color}"
+          onclick="kidsPickColor(this,'${o.label}')" title="${o.label} — ${o.meaning}">
+          ${o.emoji}
+        </div>`).join('')}
+    </div>
+    <div id="kidsColorLabel" style="font-size:0.88rem;color:var(--cream2);min-height:24px;margin-top:8px;"></div>`;
+  }
+  else if (step.type === 'stars') {
+    const stars = Array.from({length: step.max}, (_,i) =>
+      `<span class="kids-star" onclick="kidsPickStar(${i+1})" data-val="${i+1}">⭐</span>`
+    ).join('');
+    inputHtml = `<div class="kids-stars" id="kidsStars">${stars}</div>
+      <div id="kidsStarLabel" style="font-size:0.88rem;color:var(--cream2);min-height:24px;margin-top:8px;"></div>`;
+  }
+  else if (step.type === 'choices') {
+    inputHtml = `<div class="kids-choices">
+      ${step.options.map(o => `
+        <div class="kids-choice" onclick="kidsPickChoice(this,'${o.label.replace(/'/g,"\\'")}')">
+          <span class="kids-choice-icon">${o.emoji}</span>
+          <span>${o.label}</span>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  wrap.innerHTML = `
+    <div class="kids-welcome-orb" style="margin-bottom:20px;width:80px;height:80px;font-size:2.2rem;">
+      ${['🌈','🎨','⭐','🤫','💛'][kidsState.step] || '✨'}
+    </div>
+    <div class="kids-dots">${dotsHtml}</div>
+    <div class="kids-card">
+      <div class="kids-step-label">
+        <span>✦</span> Câu ${kidsState.step + 1} / ${KIDS_STEPS.length} <span>✦</span>
+      </div>
+      <div class="kids-question">${step.question}</div>
+      ${inputHtml}
+      <button class="kids-next-btn" id="kidsNextBtn" disabled onclick="kidsNext()">
+        Tiếp theo ➜
+      </button>
+    </div>`;
+}
+
+function kidsPickFace(el, emoji) {
+  el.closest('.kids-faces').querySelectorAll('.kids-face').forEach(f => f.classList.remove('picked'));
+  el.classList.add('picked');
+  kidsState.answers.feeling = emoji;
+  document.getElementById('kidsNextBtn').disabled = false;
+}
+
+function kidsPickColor(el, label) {
+  el.closest('.kids-colors').querySelectorAll('.kids-color-btn').forEach(b => b.classList.remove('picked'));
+  el.classList.add('picked');
+  kidsState.answers.color = label;
+  const opt = KIDS_STEPS[1].options.find(o => o.label === label);
+  const lbl = document.getElementById('kidsColorLabel');
+  if (lbl && opt) lbl.textContent = `${opt.label} — ${opt.meaning} ${opt.emoji}`;
+  document.getElementById('kidsNextBtn').disabled = false;
+}
+
+function kidsPickStar(val) {
+  kidsState.answers.energy = val;
+  document.querySelectorAll('.kids-star').forEach((s, i) => {
+    s.classList.toggle('lit', i < val);
+  });
+  const labels = ['','Mệt lắm rồi 😴','Hơi mệt 😔','Bình thường 🙂','Khá ổn 😊','Tràn đầy năng lượng! 🚀'];
+  const lbl = document.getElementById('kidsStarLabel');
+  if (lbl) lbl.textContent = labels[val] || '';
+  document.getElementById('kidsNextBtn').disabled = false;
+}
+
+function kidsPickChoice(el, label) {
+  el.closest('.kids-choices').querySelectorAll('.kids-choice').forEach(c => c.classList.remove('picked'));
+  el.classList.add('picked');
+  const stepId = KIDS_STEPS[kidsState.step].id;
+  kidsState.answers[stepId] = label;
+  document.getElementById('kidsNextBtn').disabled = false;
+}
+
+function kidsNext() {
+  kidsState.step++;
+  if (kidsState.step >= KIDS_STEPS.length) {
+    kidsState.finished = true;
+  }
+  renderKidsScreen();
+}
+
+function renderKidsResult(wrap) {
+  const { score, level } = calcKidsResult();
+  const feeling = KIDS_STEPS[0].options.find(o => o.emoji === kidsState.answers.feeling);
+  const energy  = kidsState.answers.energy || 3;
+
+  const configs = {
+    stable: {
+      emoji: '🌟', title: 'Bạn đang rất ổn!',
+      msg: `Tuyệt vời! Bạn đang có một ngày khá tốt. Hãy tiếp tục vui vẻ và chia sẻ nụ cười với mọi người nhé! ${feeling ? feeling.emoji : '😊'}`,
+      color: '#5CAF6A', bg: 'rgba(92,175,106,0.12)',
+    },
+    monitor: {
+      emoji: '🌤', title: 'Bạn đang ổn — nhưng có chút gì đó…',
+      msg: `Không sao cả! Đôi khi trong lòng mình có điều chưa nói được thì cũng bình thường. Hãy tìm một người lớn bạn tin tưởng và kể nhé! 🤗`,
+      color: '#D4A84B', bg: 'rgba(212,168,75,0.12)',
+    },
+    early_support: {
+      emoji: '🫂', title: 'Bạn cần được ôm và lắng nghe',
+      msg: `Cảm ơn bạn đã chia sẻ! Bạn không cần phải một mình với cảm xúc này. Hãy kể với bố/mẹ, thầy/cô, hoặc người bạn thật sự tin tưởng nhé — họ sẽ luôn ở đây cho bạn. 💛`,
+      color: '#E88AAA', bg: 'rgba(232,138,170,0.12)',
+    },
+  };
+
+  const cfg = configs[level];
+  const activities = [
+    { icon: '🎨', label: 'Vẽ tranh cảm xúc' },
+    { icon: '📖', label: 'Đọc truyện yêu thích' },
+    { icon: '🤸', label: 'Vận động 10 phút' },
+    { icon: '🫁', label: 'Thở sâu 5 lần' },
+  ];
+
+  const starsDisplay = '⭐'.repeat(energy) + '☆'.repeat(5 - energy);
+
+  wrap.innerHTML = `
+    <div class="kids-result-card">
+      <span class="kids-result-big">${cfg.emoji}</span>
+      <h2 class="kids-result-title">${cfg.title}</h2>
+      <p class="kids-result-msg">${cfg.msg}</p>
+
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:24px;">
+        <div style="text-align:center;padding:12px 20px;background:${cfg.bg};border:2px solid ${cfg.color}33;border-radius:16px;">
+          <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:${cfg.color};margin-bottom:4px;">Cảm xúc</div>
+          <div style="font-size:2rem;">${kidsState.answers.feeling || '😊'}</div>
+        </div>
+        <div style="text-align:center;padding:12px 20px;background:var(--navy3);border:2px solid var(--border2);border-radius:16px;">
+          <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--cream3);margin-bottom:4px;">Năng lượng</div>
+          <div style="font-size:1rem;letter-spacing:0.05em;">${starsDisplay}</div>
+        </div>
+      </div>
+
+      <div style="font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--cream3);margin-bottom:12px;">Gợi ý hoạt động 💡</div>
+      <div class="kids-activities">
+        ${activities.map(a => `
+          <div class="kids-activity">
+            <div class="ka-icon">${a.icon}</div>
+            <div class="ka-label">${a.label}</div>
+          </div>`).join('')}
+      </div>
+
+      ${level === 'early_support' ? `
+      <div style="background:rgba(232,138,170,0.1);border:2px solid rgba(232,138,170,0.3);border-radius:18px;padding:18px;margin-bottom:20px;display:flex;gap:14px;align-items:flex-start;">
+        <span style="font-size:1.8rem;">🫶</span>
+        <div>
+          <div style="font-size:0.9rem;color:#E88AAA;font-weight:600;margin-bottom:4px;">Nói chuyện với người lớn bạn tin nhé!</div>
+          <div style="font-size:0.82rem;color:var(--cream2);line-height:1.6;">Bố/mẹ, thầy/cô, hoặc gọi đường dây hỗ trợ: <strong style="color:#E88AAA;">1800 599 920</strong></div>
+        </div>
+      </div>` : ''}
+
+      <button class="kids-restart-btn" onclick="kidsRestart()">
+        Làm lại từ đầu 🔄
+      </button>
+      <button onclick="toggleKidsMode(null)" style="width:100%;margin-top:10px;padding:12px;border-radius:50px;border:1px solid var(--border);background:transparent;color:var(--cream2);cursor:pointer;font-family:inherit;font-size:0.88rem;">
+        Quay về LUMEN thường ←
+      </button>
+    </div>`;
+}
+
+function kidsRestart() {
+  kidsState.step     = 0;
+  kidsState.answers  = {};
+  kidsState.finished = false;
+  renderKidsScreen();
+}
+
+// ── NAVIGATION (patched to include kids screen) ───────────────
+function gotoScreen(id, tabEl) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen-' + id);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  if (tabEl) tabEl.classList.add('active');
+  else {
+    const tabs = document.querySelectorAll('.nav-tab');
+    const navMap = {home:0,chat:1,dashboard:2,timeline:3,school:4,settings:5,kids:6};
+    if (navMap[id] !== undefined && tabs[navMap[id]]) tabs[navMap[id]].classList.add('active');
+  }
+  state.currentScreen = id;
+  if (id === 'timeline') setTimeout(drawTimeline, 100);
+  if (id === 'dashboard') buildHeatmap();
+}
+</script>
+</body>
+</html>

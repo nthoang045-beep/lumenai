@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="auto">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMEN AI – Emotional Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#faf8f5;--bg2:#f2ede6;--surface:#ffffff;--surface2:#fdf9f5;
+  --text:#2a2420;--text2:#6b5e55;--text3:#a0948c;
+  --accent:#c4785a;--accent2:#e8a87c;
+  --glow:rgba(196,120,90,0.15);--glow2:rgba(196,120,90,0.08);
+  --border:rgba(196,120,90,0.18);--border2:rgba(196,120,90,0.08);
+  --warm1:#f9e8db;--warm2:#fce4cc;
+  --green:#5a9e6a;--green-glow:rgba(90,158,106,0.15);
+  --amber:#c49a3a;--amber-glow:rgba(196,154,58,0.15);
+  --rose:#b45a6a;--rose-glow:rgba(180,90,106,0.15);
+  --purple:#8a6ac4;--purple-glow:rgba(138,106,196,0.15);
+  --shadow:0 4px 24px rgba(42,36,32,0.06);
+  --shadow-lg:0 12px 48px rgba(42,36,32,0.1);
+  --radius:20px;--radius-sm:12px;
+}
+[data-theme="dark"] {
+  --bg:#141210;--bg2:#1c1915;--surface:#221e1a;--surface2:#2a2420;
+  --text:#f0e8e0;--text2:#c4b4a8;--text3:#6a5e58;
+  --accent:#e0905a;--accent2:#f0b484;
+  --glow:rgba(224,144,90,0.2);--glow2:rgba(224,144,90,0.08);
+  --border:rgba(224,144,90,0.2);--border2:rgba(224,144,90,0.08);
+  --warm1:#2a2018;--warm2:#342818;
+  --shadow:0 4px 24px rgba(0,0,0,0.3);--shadow-lg:0 12px 48px rgba(0,0,0,0.4);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+  transition:background .4s,color .4s;overflow-x:hidden;display:flex;flex-direction:column;}
+body::after{content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:0.5;}
+nav{position:sticky;top:0;z-index:100;padding:18px 32px;
+  display:flex;justify-content:space-between;align-items:center;
+  backdrop-filter:blur(24px);background:rgba(250,248,245,0.85);
+  border-bottom:1px solid var(--border2);transition:all .4s;}
+[data-theme="dark"] nav{background:rgba(20,18,16,0.88);}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;
+  letter-spacing:.22em;color:var(--accent);display:flex;align-items:center;gap:10px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);
+  animation:pulse 3s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.7);}}
+.nav-actions{display:flex;gap:10px;align-items:center;}
+.nav-btn{background:var(--surface);border:1px solid var(--border);border-radius:50px;
+  padding:7px 16px;cursor:pointer;font-size:.78rem;color:var(--text2);
+  transition:all .25s;font-family:'DM Sans',sans-serif;}
+.nav-btn:hover{background:var(--warm1);color:var(--accent);border-color:var(--accent);}
+.nav-btn.recording{background:rgba(180,90,106,0.15);border-color:var(--rose);
+  color:var(--rose);animation:rec-pulse 1.2s ease-in-out infinite;}
+@keyframes rec-pulse{0%,100%{box-shadow:0 0 0 0 rgba(180,90,106,0.4);}
+  50%{box-shadow:0 0 0 6px rgba(180,90,106,0);}}
+
+/* VOICE STATUS BAR */
+#voiceBar{
+  position:fixed;bottom:0;left:0;right:0;z-index:500;
+  background:linear-gradient(135deg,rgba(180,90,106,0.95),rgba(160,60,86,0.95));
+  backdrop-filter:blur(16px);
+  padding:14px 32px;
+  display:flex;align-items:center;gap:16px;
+  transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+}
+#voiceBar.show{transform:translateY(0);}
+.voice-indicator{display:flex;gap:4px;align-items:center;}
+.voice-bar-dot{width:4px;border-radius:2px;background:white;
+  animation:voice-wave 0.8s ease-in-out infinite;}
+.voice-bar-dot:nth-child(1){height:8px;animation-delay:0s;}
+.voice-bar-dot:nth-child(2){height:20px;animation-delay:.1s;}
+.voice-bar-dot:nth-child(3){height:12px;animation-delay:.2s;}
+.voice-bar-dot:nth-child(4){height:24px;animation-delay:.15s;}
+.voice-bar-dot:nth-child(5){height:10px;animation-delay:.05s;}
+@keyframes voice-wave{0%,100%{transform:scaleY(1);}50%{transform:scaleY(1.8);}}
+#voiceBar p{color:white;font-size:.88rem;flex:1;}
+#voiceBar span{color:rgba(255,255,255,.65);font-size:.78rem;}
+.voice-stop-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);
+  color:white;border-radius:50px;padding:6px 16px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:.78rem;
+  transition:background .2s;}
+.voice-stop-btn:hover{background:rgba(255,255,255,.35);}
+
+.app-shell{flex:1;display:grid;grid-template-columns:320px 1fr;
+  min-height:calc(100vh - 61px);}
+@media(max-width:900px){.app-shell{grid-template-columns:1fr;}}
+.sidebar{border-right:1px solid var(--border2);padding:28px 24px;
+  background:var(--surface2);display:flex;flex-direction:column;gap:24px;
+  overflow-y:auto;max-height:calc(100vh - 61px);position:sticky;top:61px;}
+@media(max-width:900px){.sidebar{position:static;max-height:none;border-right:none;border-bottom:1px solid var(--border2);}}
+.sidebar-section h3{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:14px;}
+.status-badge{display:inline-flex;align-items:center;gap:8px;
+  padding:8px 16px;border-radius:50px;font-size:.8rem;font-weight:500;margin-bottom:12px;}
+.badge-stable{background:var(--green-glow);color:var(--green);}
+.badge-monitor{background:var(--amber-glow);color:var(--amber);}
+.badge-early{background:var(--rose-glow);color:var(--rose);}
+.badge-dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse 2s infinite;}
+.score-ring-wrap{display:flex;justify-content:center;padding:12px 0;}
+.score-ring{width:110px;height:110px;position:relative;}
+.score-ring svg{transform:rotate(-90deg);}
+.score-ring circle{fill:none;stroke-width:8;stroke-linecap:round;
+  transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);}
+.ring-bg{stroke:var(--border2);}
+.ring-fg{stroke:var(--accent);}
+.score-center{position:absolute;inset:0;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;}
+.score-num{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;
+  color:var(--text);line-height:1;}
+.score-label{font-size:.65rem;color:var(--text3);letter-spacing:.1em;}
+.pattern-list{display:flex;flex-direction:column;gap:8px;}
+.pattern-tag{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border2);
+  font-size:.8rem;color:var(--text2);transition:all .3s;}
+.pattern-tag.detected{border-color:var(--accent);background:var(--warm1);color:var(--text);}
+.pattern-icon{font-size:1rem;width:20px;text-align:center;}
+.timeline-list{display:flex;flex-direction:column;gap:10px;}
+.timeline-item{padding:12px 14px;border-radius:var(--radius-sm);
+  background:var(--surface);border:1px solid var(--border2);cursor:pointer;transition:all .25s;}
+.timeline-item:hover{border-color:var(--accent);background:var(--warm1);}
+.timeline-item .t-date{font-size:.7rem;color:var(--text3);margin-bottom:4px;}
+.timeline-item .t-preview{font-size:.8rem;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.timeline-item .t-score{display:inline-flex;align-items:center;gap:4px;
+  font-size:.7rem;margin-top:6px;padding:2px 8px;border-radius:50px;}
+.main-pane{display:flex;flex-direction:column;padding:32px;gap:24px;
+  overflow-y:auto;max-height:calc(100vh - 61px);}
+@media(max-width:900px){.main-pane{max-height:none;padding:20px;}}
+.chat-area{flex:1;display:flex;flex-direction:column;gap:16px;min-height:300px;}
+.chat-msg{max-width:80%;animation:fadeUp .4s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.chat-msg.ai{align-self:flex-start;}
+.chat-msg.user{align-self:flex-end;}
+.bubble{padding:16px 20px;border-radius:var(--radius);line-height:1.7;font-size:.92rem;}
+.ai .bubble{background:var(--surface);border:1px solid var(--border2);
+  color:var(--text);border-bottom-left-radius:6px;}
+.user .bubble{background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:white;border-bottom-right-radius:6px;}
+.msg-time{font-size:.7rem;color:var(--text3);margin-top:4px;padding:0 4px;}
+.ai .msg-time{text-align:left;}.user .msg-time{text-align:right;}
+.thinking{align-self:flex-start;display:flex;align-items:center;gap:12px;
+  padding:14px 20px;background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--radius);border-bottom-left-radius:6px;
+  font-size:.85rem;color:var(--text3);}
+.thinking-dots{display:flex;gap:5px;}
+.thinking-dots span{width:6px;height:6px;border-radius:50%;background:var(--accent);
+  animation:blink 1.4s infinite;}
+.thinking-dots span:nth-child(2){animation-delay:.2s;}
+.thinking-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,60%,100%{opacity:.2;}30%{opacity:1;}}
+.input-area{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);
+  transition:border-color .3s,box-shadow .3s;}
+.input-area:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow2);}
+textarea{width:100%;padding:18px 20px 10px;background:transparent;border:none;outline:none;
+  font-family:'DM Sans',sans-serif;font-size:.93rem;color:var(--text);resize:none;
+  line-height:1.7;min-height:80px;max-height:200px;}
+textarea::placeholder{color:var(--text3);}
+.input-footer{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 16px 14px;gap:10px;}
+.input-footer-left{display:flex;align-items:center;gap:10px;}
+.char-count{font-size:.72rem;color:var(--text3);}
+.voice-btn{background:var(--surface2);border:1px solid var(--border);border-radius:50px;
+  padding:7px 14px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem;
+  color:var(--text2);transition:all .25s;display:flex;align-items:center;gap:6px;}
+.voice-btn:hover{background:var(--warm1);border-color:var(--accent);color:var(--accent);}
+.voice-btn.active{background:rgba(180,90,106,0.12);border-color:var(--rose);
+  color:var(--rose);animation:rec-pulse 1.2s ease-in-out infinite;}
+.send-btn{background:var(--accent);color:white;border:none;border-radius:50px;
+  padding:9px 22px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;
+  font-weight:500;transition:all .25s;display:flex;align-items:center;gap:7px;}
+.send-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(196,120,90,.35);}
+.send-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.result-card{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);animation:fadeUp .5s ease;}
+.result-card h4{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;
+  color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.rec-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px;}
+.rec-item{padding:14px;border-radius:var(--radius-sm);background:var(--surface2);
+  border:1px solid var(--border2);transition:all .25s;cursor:default;}
+.rec-item:hover{border-color:var(--accent);background:var(--warm1);transform:translateY(-2px);}
+.rec-icon{font-size:1.2rem;margin-bottom:6px;}
+.rec-title{font-size:.82rem;font-weight:500;color:var(--text);margin-bottom:3px;}
+.rec-desc{font-size:.75rem;color:var(--text3);line-height:1.5;}
+.tone-box{background:linear-gradient(135deg,var(--warm1),var(--warm2));
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:18px 20px;margin-top:12px;font-style:italic;
+  font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text2);line-height:1.7;}
+.urgent-banner{background:linear-gradient(135deg,rgba(180,90,106,.12),rgba(180,90,106,.06));
+  border:1.5px solid rgba(180,90,106,.4);border-radius:var(--radius-sm);
+  padding:18px 20px;margin-top:12px;display:flex;gap:14px;align-items:flex-start;}
+.urgent-icon{font-size:1.5rem;flex-shrink:0;}
+.urgent-text h5{font-size:.85rem;font-weight:500;color:var(--rose);margin-bottom:4px;}
+.urgent-text p{font-size:.82rem;color:var(--text2);line-height:1.6;}
+.urgent-text .hotline{margin-top:8px;font-family:'Cormorant Garamond',serif;
+  font-size:1.4rem;color:var(--rose);font-weight:400;}
+.json-toggle{display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--text3);
+  cursor:pointer;margin-top:12px;border-top:1px solid var(--border2);padding-top:12px;}
+.json-toggle:hover{color:var(--accent);}
+.json-block{display:none;margin-top:10px;background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--radius-sm);padding:16px;font-family:monospace;font-size:.78rem;
+  color:var(--text2);line-height:1.7;overflow-x:auto;white-space:pre;}
+.json-block.open{display:block;}
+.j-key{color:var(--accent);}.j-str{color:var(--green);}
+.j-num{color:var(--purple);}.j-bool{color:var(--amber);}
+.disclaimer{font-size:.73rem;color:var(--text3);padding:14px 18px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--radius-sm);line-height:1.7;}
+.welcome{text-align:center;padding:48px 24px;
+  display:flex;flex-direction:column;align-items:center;gap:20px;}
+.welcome-orb{width:90px;height:90px;border-radius:50%;
+  background:radial-gradient(circle,var(--accent2) 0%,var(--accent) 50%,transparent 75%);
+  animation:breathe 4s ease-in-out infinite;box-shadow:0 0 60px var(--glow);}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.85;}50%{transform:scale(1.12);opacity:1;}}
+.welcome h2{font-family:'Cormorant Garamond',serif;font-size:clamp(1.6rem,3vw,2.2rem);
+  font-weight:300;color:var(--text);line-height:1.3;}
+.welcome p{font-size:.9rem;color:var(--text2);max-width:400px;line-height:1.7;}
+.starter-chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:8px;}
+.chip{padding:9px 18px;border-radius:50px;border:1px solid var(--border);
+  background:var(--surface);font-size:.82rem;color:var(--text2);cursor:pointer;transition:all .25s;}
+.chip:hover{border-color:var(--accent);background:var(--warm1);color:var(--text);}
+
+/* Voice not supported notice */
+.voice-unsupported{font-size:.72rem;color:var(--text3);font-style:italic;}
+
+@media(max-width:600px){.rec-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    LUMEN <span style="font-style:italic;font-weight:300;opacity:.6;font-size:1.1rem;">AI</span>
+  </div>
+  <div class="nav-actions">
+    <button class="nav-btn" id="voiceNavBtn" onclick="toggleVoice()" title="Nhấn để nói">🎙️ Giọng nói</button>
+    <button class="nav-btn" onclick="clearChat()">✕ Xóa</button>
+    <button class="nav-btn" onclick="toggleTheme()">🌙</button>
+  </div>
+</nav>
+
+<!-- VOICE STATUS BAR -->
+<div id="voiceBar">
+  <div class="voice-indicator">
+    <div class="voice-bar-dot"></div><div class="voice-bar-dot"></div>
+    <div class="voice-bar-dot"></div><div class="voice-bar-dot"></div>
+    <div class="voice-bar-dot"></div>
+  </div>
+  <p>🎙️ <strong>Đang lắng nghe...</strong> Nói cảm xúc của bạn.</p>
+  <span id="voiceTranscript"></span>
+  <button class="voice-stop-btn" onclick="stopVoice()">⏹ Dừng</button>
+</div>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <h3>Trạng thái</h3>
+      <div class="status-badge badge-stable" id="statusBadge">
+        <span class="badge-dot"></span>
+        <span id="statusText">Chờ phân tích</span>
+      </div>
+      <div class="score-ring-wrap">
+        <div class="score-ring">
+          <svg viewBox="0 0 110 110" width="110" height="110">
+            <circle class="ring-bg" cx="55" cy="55" r="46"/>
+            <circle class="ring-fg" cx="55" cy="55" r="46" stroke-dasharray="289" stroke-dashoffset="289" id="ringFg"/>
+          </svg>
+          <div class="score-center">
+            <div class="score-num" id="scoreNum">—</div>
+            <div class="score-label">ĐIỂM CẢM XÚC</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <h3>Patterns phát hiện</h3>
+      <div class="pattern-list">
+        <div class="pattern-tag" id="pat-self_negation"><span class="pattern-icon">🔄</span>Tự phủ nhận cảm xúc</div>
+        <div class="pattern-tag" id="pat-emotional_suppression"><span class="pattern-icon">🤐</span>Kìm nén cảm xúc</div>
+        <div class="pattern-tag" id="pat-withdrawal_language"><span class="pattern-icon">🚪</span>Ngôn ngữ thu mình</div>
+        <div class="pattern-tag" id="pat-fatigue_signal"><span class="pattern-icon">🪫</span>Dấu hiệu kiệt sức</div>
+        <div class="pattern-tag" id="pat-self_blame"><span class="pattern-icon">⚖️</span>Tự trách bản thân</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <h3>Lịch sử phiên</h3>
+      <div class="timeline-list" id="timelineList">
+        <div style="font-size:.8rem;color:var(--text3);text-align:center;padding:12px 0;">Chưa có lịch sử</div>
+      </div>
+    </div>
+    <div class="disclaimer">⚠️ <strong>LUMEN AI</strong> là công cụ hỗ trợ nhận thức sớm, không phải chẩn đoán y khoa.</div>
+  </aside>
+
+  <main class="main-pane" id="mainPane">
+    <div class="chat-area" id="chatArea">
+      <div class="welcome" id="welcomeScreen">
+        <div class="welcome-orb"></div>
+        <h2>Bạn đang cảm thấy thế nào<br>hôm nay?</h2>
+        <p>LUMEN AI lắng nghe, không phán xét. Chia sẻ bằng tiếng Việt hoặc tiếng Anh — gõ hoặc nói.</p>
+        <div class="starter-chips">
+          <div class="chip" onclick="useStarter(this)">Tôi cảm thấy mệt mỏi dạo này</div>
+          <div class="chip" onclick="useStarter(this)">Không sao đâu, tôi ổn thôi</div>
+          <div class="chip" onclick="useStarter(this)">Tôi không biết mình đang cảm thấy gì</div>
+          <div class="chip" onclick="useStarter(this)">I've been really stressed lately</div>
+          <div class="chip" onclick="useStarter(this)">Mọi người hỏi tôi ổn không nhưng tôi chỉ nói "bình thường"</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <textarea id="userInput" placeholder="Hãy chia sẻ cảm xúc của bạn… LUMEN đang lắng nghe." rows="3"
+        oninput="updateChar()" onkeydown="handleKey(event)"></textarea>
+      <div class="input-footer">
+        <div class="input-footer-left">
+          <span class="char-count" id="charCount">0 ký tự</span>
+          <button class="voice-btn" id="voiceInputBtn" onclick="toggleVoice()" title="Nhấn để nói">🎙️ Nói</button>
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          Phân tích <span>↗</span>
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ── CONFIG ───────────────────────────────────────────────────────────────────
+// ✅ FIX CRITICAL: Gọi localhost proxy thay vì Anthropic trực tiếp
+const API_URL = '/api/chat';
+
+const SYSTEM_PROMPT = `You are LUMEN AI – an empathetic early-warning emotional support system.
+You are NOT a medical diagnostic system. You do NOT label users with disorders. You do NOT judge.
+Detect: emotional deviation patterns, silence signals, defensive language, self-blame, withdrawal.
+Output STRICTLY and ONLY in JSON (no preamble, no extra text):
+{
+  "emotional_state_score": <0-100>,
+  "risk_level": "<stable|monitor|early_support>",
+  "detected_patterns": ["<from: self_negation, emotional_suppression, withdrawal_language, fatigue_signal, self_blame>"],
+  "summary": "<2-3 sentences in SAME LANGUAGE as user>",
+  "support_recommendation": ["<from: breathing_exercise, journal_prompt, connect_with_someone, seek_professional_support_if_needed, rest_and_self_care, mindful_moment>"],
+  "tone_response": "<warm 2-4 sentence empathetic message in SAME LANGUAGE. No diagnosis.>"
+}
+If risk_level is early_support, also add: "urgent_support": true`;
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let conversationHistory = [];   // ✅ FIX WARNING: sliding window handled in server
+let sessionHistory      = [];
+let recognition         = null;
+let isRecording         = false;
+
+// ── VOICE (Web Speech API) ───────────────────────────────────────────────────
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function initVoice() {
+  if (!SpeechRecognition) {
+    document.getElementById('voiceNavBtn').style.display = 'none';
+    document.getElementById('voiceInputBtn').innerHTML = '<span class="voice-unsupported">Trình duyệt không hỗ trợ voice</span>';
+    document.getElementById('voiceInputBtn').style.cursor = 'default';
+    return false;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.lang          = 'vi-VN';   // Tiếng Việt mặc định
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+  recognition.continuous    = false;
+
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById('voiceBar').classList.add('show');
+    document.getElementById('voiceNavBtn').classList.add('recording');
+    document.getElementById('voiceNavBtn').textContent = '⏹ Đang nghe…';
+    document.getElementById('voiceInputBtn').classList.add('active');
+    document.getElementById('voiceInputBtn').textContent = '⏹ Dừng';
+    document.getElementById('voiceTranscript').textContent = '';
+  };
+
+  recognition.onresult = (e) => {
+    let interim = '', final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) final += t;
+      else interim += t;
+    }
+    // Show interim in status bar
+    document.getElementById('voiceTranscript').textContent = interim || final;
+    // Append final to textarea
+    if (final) {
+      const inp = document.getElementById('userInput');
+      inp.value = (inp.value + ' ' + final).trim();
+      updateChar();
+    }
+  };
+
+  recognition.onerror = (e) => {
+    console.warn('Voice error:', e.error);
+    let msg = 'Không nhận được giọng nói.';
+    if (e.error === 'not-allowed') msg = 'Cần cấp quyền microphone.';
+    if (e.error === 'network')     msg = 'Lỗi mạng khi nhận dạng.';
+    document.getElementById('voiceTranscript').textContent = '⚠️ ' + msg;
+    setTimeout(stopVoice, 2000);
+  };
+
+  recognition.onend = () => {
+    stopVoice();
+    // Auto-detect language from transcript and set for next time
+    const text = document.getElementById('userInput').value;
+    if (text && /[a-zA-Z]/.test(text) && !/[àáảãạăắặẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]/.test(text)) {
+      recognition.lang = 'en-US';
+    } else {
+      recognition.lang = 'vi-VN';
+    }
+  };
+
+  return true;
+}
+
+function toggleVoice() {
+  if (!recognition && !initVoice()) return;
+  if (isRecording) { stopVoice(); return; }
+
+  try {
+    recognition.start();
+  } catch(e) {
+    console.warn('Cannot start recognition:', e);
+  }
+}
+
+function stopVoice() {
+  isRecording = false;
+  document.getElementById('voiceBar').classList.remove('show');
+  document.getElementById('voiceNavBtn').classList.remove('recording');
+  document.getElementById('voiceNavBtn').textContent = '🎙️ Giọng nói';
+  document.getElementById('voiceInputBtn').classList.remove('active');
+  document.getElementById('voiceInputBtn').textContent = '🎙️ Nói';
+  if (recognition) {
+    try { recognition.stop(); } catch(e) {}
+  }
+}
+
+// ── THEME ─────────────────────────────────────────────────────────────────────
+const hour = new Date().getHours();
+if (hour >= 19 || hour < 6) document.documentElement.setAttribute('data-theme','dark');
+
+function toggleTheme() {
+  const t = document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'light' : 'dark');
+  document.querySelector('[onclick="toggleTheme()"]').textContent = t === 'dark' ? '🌙' : '☀️';
+}
+
+// ── INPUT HELPERS ─────────────────────────────────────────────────────────────
+function updateChar() {
+  document.getElementById('charCount').textContent = document.getElementById('userInput').value.length + ' ký tự';
+}
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+function useStarter(el) {
+  document.getElementById('userInput').value = el.textContent.trim();
+  updateChar();
+  document.getElementById('userInput').focus();
+}
+
+// ── CLEAR CHAT ────────────────────────────────────────────────────────────────
+// ✅ FIX WARNING: clearChat() giờ reset cả conversationHistory
+function clearChat() {
+  conversationHistory = [];   // ← Fix: reset AI memory
+  sessionHistory      = [];
+  document.getElementById('chatArea').innerHTML = `
+    <div class="welcome" id="welcomeScreen">
+      <div class="welcome-orb"></div>
+      <h2>Bạn đang cảm thấy thế nào<br>hôm nay?</h2>
+      <p>LUMEN AI lắng nghe, không phán xét.</p>
+      <div class="starter-chips">
+        <div class="chip" onclick="useStarter(this)">Tôi cảm thấy mệt mỏi dạo này</div>
+        <div class="chip" onclick="useStarter(this)">Không sao đâu, tôi ổn thôi</div>
+        <div class="chip" onclick="useStarter(this)">Tôi không biết mình đang cảm thấy gì</div>
+        <div class="chip" onclick="useStarter(this)">I've been really stressed lately</div>
+        <div class="chip" onclick="useStarter(this)">Mọi người hỏi tôi ổn không nhưng tôi chỉ nói "bình thường"</div>
+      </div>
+    </div>`;
+  document.getElementById('timelineList').innerHTML = '<div style="font-size:.8rem;color:var(--text3);text-align:center;padding:12px 0;">Chưa có lịch sử</div>';
+  resetSidebar();
+}
+
+function resetSidebar() {
+  document.getElementById('scoreNum').textContent = '—';
+  document.getElementById('ringFg').setAttribute('stroke-dashoffset','289');
+  document.getElementById('statusBadge').className = 'status-badge badge-stable';
+  document.getElementById('statusText').textContent = 'Chờ phân tích';
+  document.querySelectorAll('.pattern-tag').forEach(t => t.classList.remove('detected'));
+}
+
+// ── SEND MESSAGE ──────────────────────────────────────────────────────────────
+const recMap = {
+  breathing_exercise:{icon:'🫁',title:'Bài thở 4-7-8',desc:'Hít 4s, giữ 7s, thở ra 8s. Lặp 4 lần.'},
+  journal_prompt:{icon:'✍️',title:'Viết nhật ký',desc:'Không cần hay — chỉ cần thật. 5 phút.'},
+  connect_with_someone:{icon:'🤝',title:'Kết nối ai đó',desc:'Nhắn cho người bạn tin tưởng.'},
+  seek_professional_support_if_needed:{icon:'💬',title:'Gặp chuyên gia',desc:'Hỗ trợ chuyên sâu khi cần.'},
+  rest_and_self_care:{icon:'🌿',title:'Nghỉ ngơi',desc:'Cho phép mình dừng lại.'},
+  mindful_moment:{icon:'🧘',title:'Khoảnh khắc tĩnh',desc:'1 phút chỉ cảm nhận hơi thở.'},
+};
+
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const text  = input.value.trim();
+  if (!text) return;
+
+  // Stop voice if running
+  if (isRecording) stopVoice();
+
+  const welcome = document.getElementById('welcomeScreen');
+  if (welcome) welcome.remove();
+
+  addUserBubble(text);
+  input.value = ''; updateChar();
+  document.getElementById('sendBtn').disabled = true;
+
+  conversationHistory.push({role:'user', content:text});
+
+  const thinking = addThinking();
+
+  try {
+    const res = await fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:SYSTEM_PROMPT,
+        messages:conversationHistory   // server handles sliding window
+      })
+    });
+
+    const data = await res.json();
+    thinking.remove();
+
+    if (!res.ok) {
+      const errMsg = data?.error?.message || `Lỗi ${res.status}`;
+      addAiBubble(`⚠️ ${errMsg}`);
+      document.getElementById('sendBtn').disabled = false;
+      return;
+    }
+
+    const rawText = data.content?.[0]?.text || '';
+    let json;
+    try {
+      json = JSON.parse(rawText.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());
+    } catch(e) {
+      addAiBubble('Xin lỗi, lỗi khi phân tích phản hồi. Vui lòng thử lại.');
+      document.getElementById('sendBtn').disabled = false;
+      return;
+    }
+
+    conversationHistory.push({role:'assistant', content:rawText});
+    updateSidebar(json);
+    renderResultCard(json, text);
+    addToTimeline(json, text);
+
+  } catch(e) {
+    thinking.remove();
+    addAiBubble('Không thể kết nối server. Đảm bảo server.js đang chạy tại localhost:3000.');
+  }
+
+  document.getElementById('sendBtn').disabled = false;
+  scrollBottom();
+}
+
+function addUserBubble(text) {
+  const t = now();
+  const d = document.createElement('div');
+  d.className = 'chat-msg user';
+  d.innerHTML = `<div class="bubble">${esc(text)}</div><div class="msg-time">${t}</div>`;
+  document.getElementById('chatArea').appendChild(d);
+  scrollBottom();
+}
+
+function addAiBubble(text) {
+  const t = now();
+  const d = document.createElement('div');
+  d.className = 'chat-msg ai';
+  d.innerHTML = `<div class="bubble">${esc(text)}</div><div class="msg-time">LUMEN · ${t}</div>`;
+  document.getElementById('chatArea').appendChild(d);
+  scrollBottom();
+}
+
+function addThinking() {
+  const d = document.createElement('div');
+  d.className = 'thinking';
+  d.innerHTML = `<span>LUMEN đang phân tích</span><div class="thinking-dots"><span></span><span></span><span></span></div>`;
+  document.getElementById('chatArea').appendChild(d);
+  scrollBottom();
+  return d;
+}
+
+function renderResultCard(json, orig) {
+  const t = now();
+  const d = document.createElement('div');
+  d.className = 'chat-msg ai';
+  const rColors = {stable:'var(--green)',monitor:'var(--amber)',early_support:'var(--rose)'};
+  const rLabels = {stable:'Ổn định',monitor:'Cần theo dõi',early_support:'Cần hỗ trợ sớm'};
+  const color   = rColors[json.risk_level] || rColors.stable;
+
+  const recsHtml = json.support_recommendation?.length
+    ? `<p style="font-size:.75rem;color:var(--text3);margin-top:16px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.12em;">Gợi ý hỗ trợ</p>
+       <div class="rec-grid">${json.support_recommendation.map(r => {
+         const m = recMap[r]||{icon:'💡',title:r,desc:''};
+         return `<div class="rec-item"><div class="rec-icon">${m.icon}</div><div class="rec-title">${m.title}</div><div class="rec-desc">${m.desc}</div></div>`;
+       }).join('')}</div>` : '';
+
+  const urgentHtml = json.urgent_support
+    ? `<div class="urgent-banner"><div class="urgent-icon">🕯</div><div class="urgent-text">
+        <h5>Bạn không phải đi qua điều này một mình</h5>
+        <p>Hãy cân nhắc liên hệ người bạn tin hoặc chuyên gia sức khỏe tâm thần.</p>
+        <div class="hotline">📞 1800 599 920</div>
+        <p style="font-size:.75rem;margin-top:4px;opacity:.7">Miễn phí · 24/7</p>
+      </div></div>` : '';
+
+  const id = 'j'+Date.now();
+  const jsonStr = JSON.stringify(json,null,2)
+    .replace(/"([^"]+)":/g,'<span class="j-key">"$1"</span>:')
+    .replace(/: "([^"]+)"/g,': <span class="j-str">"$1"</span>')
+    .replace(/: (\d+)/g,': <span class="j-num">$1</span>')
+    .replace(/: (true|false)/g,': <span class="j-bool">$1</span>');
+
+  d.innerHTML = `<div class="result-card">
+    <h4>🔍 Phân tích cảm xúc <span style="font-size:.8rem;color:${color};padding:3px 12px;border-radius:50px;background:${color}22;">${rLabels[json.risk_level]||''}</span></h4>
+    <p style="font-size:.88rem;color:var(--text2);line-height:1.7;">${esc(json.summary||'')}</p>
+    ${recsHtml}
+    <div class="tone-box">${esc(json.tone_response||'')}</div>
+    ${urgentHtml}
+    <div class="json-toggle" onclick="toggleJson('${id}')"><span>{ }</span> Raw JSON <span id="ar${id}" style="margin-left:auto">▾</span></div>
+    <div class="json-block" id="${id}">${jsonStr}</div>
+  </div><div class="msg-time">LUMEN AI · ${t}</div>`;
+  document.getElementById('chatArea').appendChild(d);
+  scrollBottom();
+}
+
+function toggleJson(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+  document.getElementById('ar'+id).textContent = el.classList.contains('open') ? '▴' : '▾';
+}
+
+function updateSidebar(json) {
+  const score = json.emotional_state_score ?? 50;
+  document.getElementById('scoreNum').textContent = score;
+  const circ   = 2*Math.PI*46;
+  const offset = circ - (score/100)*circ;
+  const ring   = document.getElementById('ringFg');
+  ring.setAttribute('stroke-dashoffset', offset.toFixed(1));
+  ring.setAttribute('stroke-dasharray',  circ.toFixed(1));
+  ring.style.stroke = json.risk_level==='early_support' ? 'var(--rose)'
+    : json.risk_level==='monitor' ? 'var(--amber)' : 'var(--green)';
+  const badge  = document.getElementById('statusBadge');
+  const labels = {stable:'Ổn định',monitor:'Cần theo dõi',early_support:'Cần hỗ trợ sớm'};
+  const cls    = {stable:'badge-stable',monitor:'badge-monitor',early_support:'badge-early'};
+  badge.className = 'status-badge '+(cls[json.risk_level]||'badge-stable');
+  document.getElementById('statusText').textContent = labels[json.risk_level]||'Ổn định';
+  ['self_negation','emotional_suppression','withdrawal_language','fatigue_signal','self_blame'].forEach(p => {
+    const el = document.getElementById('pat-'+p);
+    if (el) el.classList.toggle('detected', json.detected_patterns?.includes(p)||false);
+  });
+}
+
+function addToTimeline(json, text) {
+  sessionHistory.unshift({json,text,time:new Date()});
+  const tl = document.getElementById('timelineList');
+  const colors = {stable:'var(--green)',monitor:'var(--amber)',early_support:'var(--rose)'};
+  tl.innerHTML = sessionHistory.map(s => {
+    const c = colors[s.json.risk_level]||colors.stable;
+    return `<div class="timeline-item">
+      <div class="t-date">${s.time.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</div>
+      <div class="t-preview">${esc(s.text.substring(0,50))}…</div>
+      <span class="t-score" style="background:${c}22;color:${c}">${s.json.emotional_state_score} điểm</span>
+    </div>`;
+  }).join('');
+}
+
+function scrollBottom() {
+  const m = document.getElementById('mainPane');
+  m.scrollTop = m.scrollHeight;
+}
+function now() { return new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}); }
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+
+// Init
+initVoice();
+</script>
+</body>
+</html>
