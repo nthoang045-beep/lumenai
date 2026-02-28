@@ -224,7 +224,7 @@ ${JSON.stringify(data.history, null, 2)}
 
   const filePath =
     pathname === "/"
-      ? path.join(__dirname, "lumen.html")
+      ? path.join(__dirname, "index.html")
       : path.join(__dirname, pathname);
 
   fs.readFile(filePath, (err, data) => {
