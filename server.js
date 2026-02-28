@@ -1,132 +1,220 @@
 /**
- * LUMEN AI — Clean Server
- * Chạy được: Windows / macOS / Linux / Render / Railway
- * Không cần express
+ * LUMEN SCHOOL OFFICIAL — COMPLETE EDITION
+ * Risk Detection + Local Privacy + Admin Alert
  */
 
-const fs   = require('fs');
-const path = require('path');
-const http  = require('http');
-const https = require('https');
-const url   = require('url');
+const fs = require("fs");
+const path = require("path");
+const http = require("http");
+const https = require("https");
+const url = require("url");
 
 /* ================= ENV ================= */
 
 try {
-  fs.readFileSync(path.join(__dirname, '.env'), 'utf8')
+  fs.readFileSync(path.join(__dirname, ".env"), "utf8")
     .split(/\r?\n/)
-    .forEach(line => {
+    .forEach((line) => {
       const m = line.match(/^([A-Z_][A-Z0-9_]*)\s*=\s*(.+)$/);
-      if (m) process.env[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
+      if (m)
+        process.env[m[1]] = m[2]
+          .trim()
+          .replace(/^["']|["']$/g, "");
     });
-} catch(e) {}
+} catch {}
 
-const PORT    = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 const API_KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
+const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK || "";
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || "";
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
 
 if (!API_KEY) {
-  console.log('\x1b[33m⚠️  ANTHROPIC_API_KEY chưa được set!\x1b[0m');
+  console.log("⚠️ Missing ANTHROPIC_API_KEY");
 }
 
-/* ================= MIME ================= */
+/* ================= SCHOOL SYSTEM PROMPT ================= */
 
-const MIME = {
-  '.html':'text/html; charset=utf-8',
-  '.js':'application/javascript; charset=utf-8',
-  '.css':'text/css; charset=utf-8',
-  '.json':'application/json',
-  '.svg':'image/svg+xml',
-  '.ico':'image/x-icon',
-  '.png':'image/png',
-  '.jpg':'image/jpeg',
-  '.woff2':'font/woff2',
-};
+const SYSTEM_PROMPT = `
+Bạn là LUMEN — Hệ thống hỗ trợ cảm xúc chính thức dành cho học sinh Việt Nam (13–18 tuổi).
+
+Phân tầng:
+Level 1: cảm xúc nhẹ
+Level 2: căng thẳng trung bình
+Level 3: nguy cơ cao (bạo lực, tự hại, tuyệt vọng)
+
+Nếu Level 3:
+- Nhấn mạnh không phải lỗi của học sinh
+- Khuyến khích tìm giáo viên / phụ huynh
+- Gợi ý gọi 111 (Tổng đài bảo vệ trẻ em VN)
+
+Không nói "cố lên", không giáo điều.
+
+Output JSON:
+
+{
+  "emotion_score": number,
+  "risk_level": 1 | 2 | 3,
+  "detected_patterns": [array],
+  "reply": "..."
+}
+
+Chỉ trả JSON.
+`;
 
 /* ================= SERVER ================= */
 
 const server = http.createServer((req, res) => {
 
-  const parsed   = url.parse(req.url, true);
-  const pathname = decodeURIComponent(parsed.pathname);
+  const parsed = url.parse(req.url, true);
+  const pathname = parsed.pathname;
 
-  // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
     res.writeHead(204);
     res.end();
     return;
   }
 
-  /* ================= API CHAT ================= */
+  /* ================= CHAT ================= */
 
-  if (pathname === '/api/chat' && req.method === 'POST') {
+  if (pathname === "/api/chat" && req.method === "POST") {
 
-    let body = '';
-    req.on('data', chunk => {
-      body += chunk;
-      if (body.length > 1e6) req.destroy();
-    });
+    let body = "";
 
-    req.on('end', () => {
+    req.on("data", chunk => body += chunk);
+    req.on("end", () => {
 
-      let payload;
+      let userInput;
       try {
-        payload = JSON.parse(body);
+        userInput = JSON.parse(body).message;
       } catch {
-        res.writeHead(400, {'Content-Type':'application/json'});
-        res.end(JSON.stringify({error:'Bad JSON'}));
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: "Invalid JSON" }));
         return;
       }
 
-      if (!API_KEY) {
-        res.writeHead(503, {'Content-Type':'application/json'});
-        res.end(JSON.stringify({error:'API key chưa được cấu hình'}));
-        return;
-      }
-
-      // giữ tối đa 30 tin nhắn gần nhất
-      if (Array.isArray(payload.messages) && payload.messages.length > 30) {
-        payload.messages = payload.messages.slice(-30);
-      }
-
-      const postData = JSON.stringify(payload);
+      const payload = JSON.stringify({
+        model: "claude-3-haiku-20240307",
+        max_tokens: 600,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: userInput }]
+      });
 
       const options = {
-        hostname: 'api.anthropic.com',
+        hostname: "api.anthropic.com",
         port: 443,
-        path: '/v1/messages',
-        method: 'POST',
+        path: "/v1/messages",
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(postData),
-          'x-api-key': API_KEY,
-          'anthropic-version': '2023-06-01',
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(payload),
+          "x-api-key": API_KEY,
+          "anthropic-version": "2023-06-01"
         }
       };
 
       const proxy = https.request(options, pRes => {
 
-        let data = '';
-        pRes.on('data', chunk => data += chunk);
+        let data = "";
+        pRes.on("data", chunk => data += chunk);
 
-        pRes.on('end', () => {
-          res.writeHead(pRes.statusCode, {'Content-Type':'application/json'});
-          res.end(data);
-          console.log("API Status:", pRes.statusCode);
+        pRes.on("end", () => {
+          try {
+            const parsed = JSON.parse(data);
+            const text = parsed.content?.[0]?.text || "{}";
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(text);
+          } catch {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: "AI parse error" }));
+          }
         });
 
       });
 
-      proxy.on('error', err => {
-        console.error("Proxy error:", err.message);
-        res.writeHead(502, {'Content-Type':'application/json'});
-        res.end(JSON.stringify({error:'Không kết nối được API'}));
+      proxy.on("error", err => {
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: err.message }));
       });
 
-      proxy.write(postData);
+      proxy.write(payload);
       proxy.end();
+    });
+
+    return;
+  }
+
+  /* ================= ADMIN ALERT ================= */
+
+  if (pathname === "/api/alert-admin" && req.method === "POST") {
+
+    let body = "";
+
+    req.on("data", chunk => body += chunk);
+
+    req.on("end", () => {
+
+      const data = JSON.parse(body);
+
+      const message = `
+🚨 LUMEN SCHOOL ALERT 🚨
+
+Risk Level: ${data.risk}
+Emotion Score: ${data.score}
+
+Full Conversation:
+${JSON.stringify(data.history, null, 2)}
+`;
+
+      // DISCORD
+      if (DISCORD_WEBHOOK) {
+        const parsedUrl = new URL(DISCORD_WEBHOOK);
+        const payload = JSON.stringify({ content: message });
+
+        const options = {
+          hostname: parsedUrl.hostname,
+          path: parsedUrl.pathname + parsedUrl.search,
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(payload)
+          }
+        };
+
+        const alertReq = https.request(options);
+        alertReq.write(payload);
+        alertReq.end();
+      }
+
+      // TELEGRAM
+      if (TELEGRAM_TOKEN && TELEGRAM_CHAT_ID) {
+
+        const payload = JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: message
+        });
+
+        const options = {
+          hostname: "api.telegram.org",
+          path: `/bot${TELEGRAM_TOKEN}/sendMessage`,
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(payload)
+          }
+        };
+
+        const tgReq = https.request(options);
+        tgReq.write(payload);
+        tgReq.end();
+      }
+
+      res.writeHead(200);
+      res.end(JSON.stringify({ status: "alert processed" }));
     });
 
     return;
@@ -134,54 +222,25 @@ const server = http.createServer((req, res) => {
 
   /* ================= STATIC FILES ================= */
 
-  const routeMap = {
-    '/': 'index.html',
-    '/advanced': 'lumen-advanced.html',
-    '/advanced/': 'lumen-advanced.html',
-  };
+  const filePath =
+    pathname === "/"
+      ? path.join(__dirname, "lumen.html")
+      : path.join(__dirname, pathname);
 
-  let fileName = routeMap[pathname] || pathname.replace(/^\//, '');
-
-  const tryPaths = [
-    path.join(__dirname, 'public', fileName),
-    path.join(__dirname, fileName),
-  ];
-
-  function tryNext(i) {
-    if (i >= tryPaths.length) {
-      res.writeHead(404, {'Content-Type':'text/html; charset=utf-8'});
-      res.end('<h2>404 - Không tìm thấy</h2>');
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.writeHead(404);
+      res.end("Not Found");
       return;
     }
+    res.writeHead(200);
+    res.end(data);
+  });
 
-    fs.readFile(tryPaths[i], (err, data) => {
-      if (err) {
-        tryNext(i+1);
-        return;
-      }
-
-      const ext  = path.extname(tryPaths[i]).toLowerCase();
-      const mime = MIME[ext] || 'text/plain; charset=utf-8';
-
-      res.writeHead(200, {'Content-Type': mime});
-      res.end(data);
-    });
-  }
-
-  tryNext(0);
 });
 
 /* ================= START ================= */
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log("\n🚀 LUMEN AI Server Running");
-  console.log("🌿 Chat: http://localhost:" + PORT);
-  console.log("⚡ Full: http://localhost:" + PORT + "/advanced");
-  console.log("API Key:", API_KEY ? "Loaded ✅" : "Missing ❌");
-  console.log("");
-});
-
-server.on('error', err => {
-  console.error("Server error:", err.message);
-  process.exit(1);
+server.listen(PORT, () => {
+  console.log("🎓 LUMEN SCHOOL OFFICIAL RUNNING ON PORT", PORT);
 });
